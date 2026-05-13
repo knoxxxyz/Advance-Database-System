@@ -1,0 +1,1150 @@
+﻿<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Study Tracker – Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
+    <style>
+      body {
+        font-family: "Inter", system-ui, sans-serif;
+      }
+      .sidebar {
+        background: #1e1b4b;
+      }
+      .sidebar-panel {
+        transform: translateX(-100%);
+        transition:
+          transform 0.25s ease,
+          width 0.25s ease;
+      }
+      .sidebar-panel.open {
+        transform: translateX(0);
+      }
+      .sidebar.collapsed {
+        width: 5rem;
+        min-width: 5rem;
+      }
+      .sidebar.collapsed .sidebar-brand-text,
+      .sidebar.collapsed .nav-label,
+      .sidebar.collapsed .user-meta,
+      .sidebar.collapsed .logout-label {
+        display: none;
+      }
+      .sidebar.collapsed .nav-btn {
+        justify-content: center;
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
+      }
+      .sidebar.collapsed .nav-btn i {
+        margin-right: 0;
+      }
+      .sidebar-backdrop {
+        transition: opacity 0.25s ease;
+      }
+      .nav-active {
+        background: rgba(99, 91, 234, 0.3);
+        color: #fff !important;
+      }
+      .page {
+        display: none;
+      }
+      .page.active {
+        display: block;
+      }
+      input:focus,
+      select:focus,
+      textarea:focus {
+        border-color: #6c5ce7 !important;
+        box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.15);
+      }
+      ::-webkit-scrollbar {
+        width: 5px;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #d1d5db;
+        border-radius: 3px;
+      }
+      .toast {
+        transition:
+          opacity 0.3s,
+          transform 0.3s;
+      }
+      .btn-hover:hover {
+        transform: translateY(-1px);
+      }
+      .card-hover:hover {
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        transform: translateY(-1px);
+      }
+      .logout-active {
+        background: #dc2626 !important;
+        color: #fff !important;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-50 overflow-hidden">
+    <div class="flex h-screen w-screen">
+      <div class="sidebar w-60 flex-shrink-0 flex flex-col h-full">
+        <div class="flex items-center gap-3 px-5 py-5 border-b border-white/10">
+          <div
+            class="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500 to-indigo-400 flex items-center justify-center flex-shrink-0"
+          >
+            <i class="fas fa-book-open text-white text-sm"></i>
+          </div>
+          <span class="text-white font-bold text-[15px]">Study Tracker</span>
+        </div>
+
+        <div class="flex-1 px-3 py-3 overflow-y-auto space-y-0.5">
+          <p
+            class="text-[10px] font-bold text-white/30 uppercase tracking-widest px-3 pt-3 pb-2"
+          >
+            Admin
+          </p>
+          <button
+            onclick="nav('overview', this)"
+            class="nav-btn nav-active w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13.5px] font-medium text-white/60 transition-all"
+          >
+            <i class="fas fa-th-large w-4 text-center text-sm"></i> Overview
+          </button>
+          <button
+            onclick="nav('users', this)"
+            class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13.5px] font-medium text-white/60 hover:bg-white/7 hover:text-white/90 transition-all"
+          >
+            <i class="fas fa-user w-4 text-center text-sm"></i> Users
+            <span
+              id="usersNavBadge"
+              class="ml-auto hidden rounded-full bg-emerald-500 px-2 py-0.5 text-[10px] font-bold text-white"
+              >New</span
+            >
+          </button>
+          <button
+            onclick="nav('allsessions', this)"
+            class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13.5px] font-medium text-white/60 hover:bg-white/7 hover:text-white/90 transition-all"
+          >
+            <i class="fas fa-clock w-4 text-center text-sm"></i> All Sessions
+          </button>
+          <button
+            onclick="nav('analytics', this)"
+            class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13.5px] font-medium text-white/60 hover:bg-white/7 hover:text-white/90 transition-all"
+          >
+            <i class="fas fa-chart-bar w-4 text-center text-sm"></i> Analytics
+          </button>
+
+          <div class="border-t border-white/10 my-2"></div>
+        </div>
+
+        <div class="px-3 py-3 border-t border-white/10">
+          <div class="flex items-center gap-2.5 px-3 py-2.5 mb-2">
+            <div
+              id="sbAvatar"
+              class="w-8 h-8 rounded-full bg-gradient-to-br from-violet-500 to-indigo-400 flex items-center justify-center text-white font-bold text-xs flex-shrink-0"
+            >
+              A
+            </div>
+            <div>
+              <p id="sbName" class="text-white text-[13px] font-semibold">
+                Admin
+              </p>
+              <p class="text-white/40 text-[11px]">Admin</p>
+            </div>
+            <i class="fas fa-chevron-left text-white/30 text-xs ml-auto"></i>
+          </div>
+          <button
+            onclick="doLogout()"
+            class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-[13.5px] font-medium text-white/60 hover:bg-white/7 hover:text-white/90 transition-all logout-button"
+          >
+            <i class="fas fa-sign-out-alt w-4 text-center text-sm"></i> Logout
+          </button>
+        </div>
+      </div>
+
+      <div class="flex-1 flex flex-col overflow-hidden bg-gray-50">
+        <div
+          class="flex items-start justify-between px-8 pt-7 pb-0 bg-gray-50 flex-shrink-0"
+        >
+          <div>
+            <h1 id="pageTitle" class="text-2xl font-extrabold text-gray-900">
+              Admin Overview
+            </h1>
+            <p id="pageSub" class="text-sm text-gray-400 mt-0.5">
+              Platform-wide statistics and insights
+            </p>
+          </div>
+        </div>
+
+        <div class="flex-1 overflow-y-auto px-8 py-5">
+          <div class="page active" id="page-overview">
+            <div class="grid grid-cols-4 gap-3.5 mb-5">
+              <div
+                class="bg-white rounded-2xl border border-gray-100 p-5 flex items-start justify-between card-hover transition-all"
+              >
+                <div>
+                  <p
+                    class="text-[10.5px] font-bold text-gray-400 uppercase tracking-wider mb-2.5"
+                  >
+                    Total Users
+                  </p>
+                  <p
+                    id="ov-users"
+                    class="text-3xl font-extrabold text-gray-900 leading-none mb-1.5"
+                  >
+                    —
+                  </p>
+                  <p class="text-xs text-gray-400">registered accounts</p>
+                </div>
+                <div
+                  class="w-9 h-9 rounded-xl bg-violet-50 flex items-center justify-center flex-shrink-0"
+                >
+                  <i class="fas fa-users text-violet-600 text-sm"></i>
+                </div>
+              </div>
+              <div
+                class="bg-white rounded-2xl border border-gray-100 p-5 flex items-start justify-between card-hover transition-all"
+              >
+                <div>
+                  <p
+                    class="text-[10.5px] font-bold text-gray-400 uppercase tracking-wider mb-2.5"
+                  >
+                    New Users
+                  </p>
+                  <p
+                    id="ov-new-users"
+                    class="text-3xl font-extrabold text-gray-900 leading-none mb-1.5"
+                  >
+                    —
+                  </p>
+                  <p class="text-xs text-gray-400">registered this week</p>
+                </div>
+                <div
+                  class="w-9 h-9 rounded-xl bg-emerald-50 flex items-center justify-center flex-shrink-0"
+                >
+                  <i class="fas fa-user-plus text-emerald-600 text-sm"></i>
+                </div>
+              </div>
+              <div
+                class="bg-white rounded-2xl border border-gray-100 p-5 flex items-start justify-between card-hover transition-all"
+              >
+                <div>
+                  <p
+                    class="text-[10.5px] font-bold text-gray-400 uppercase tracking-wider mb-2.5"
+                  >
+                    Total Study Hours
+                  </p>
+                  <p
+                    id="ov-hours"
+                    class="text-3xl font-extrabold text-gray-900 leading-none mb-1.5"
+                  >
+                    —
+                  </p>
+                  <p class="text-xs text-gray-400">across all users</p>
+                </div>
+                <div
+                  class="w-9 h-9 rounded-xl bg-teal-50 flex items-center justify-center flex-shrink-0"
+                >
+                  <i class="fas fa-clock text-teal-600 text-sm"></i>
+                </div>
+              </div>
+              <div
+                class="bg-white rounded-2xl border border-gray-100 p-5 flex items-start justify-between card-hover transition-all"
+              >
+                <div>
+                  <p
+                    class="text-[10.5px] font-bold text-gray-400 uppercase tracking-wider mb-2.5"
+                  >
+                    Active Goals
+                  </p>
+                  <p
+                    id="ov-goals"
+                    class="text-3xl font-extrabold text-gray-900 leading-none mb-1.5"
+                  >
+                    —
+                  </p>
+                  <p class="text-xs text-gray-400">goals created</p>
+                </div>
+                <div
+                  class="w-9 h-9 rounded-xl bg-emerald-50 flex items-center justify-center flex-shrink-0"
+                >
+                  <i class="fas fa-bullseye text-emerald-600 text-sm"></i>
+                </div>
+              </div>
+              <div
+                class="bg-white rounded-2xl border border-gray-100 p-5 flex items-start justify-between card-hover transition-all"
+              >
+                <div>
+                  <p
+                    class="text-[10.5px] font-bold text-gray-400 uppercase tracking-wider mb-2.5"
+                  >
+                    Subjects
+                  </p>
+                  <p
+                    id="ov-subjects"
+                    class="text-3xl font-extrabold text-gray-900 leading-none mb-1.5"
+                  >
+                    —
+                  </p>
+                  <p class="text-xs text-gray-400">subjects tracked</p>
+                </div>
+                <div
+                  class="w-9 h-9 rounded-xl bg-orange-50 flex items-center justify-center flex-shrink-0"
+                >
+                  <i class="fas fa-book text-orange-500 text-sm"></i>
+                </div>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-[1fr_320px] gap-3.5">
+              <div
+                class="bg-white rounded-2xl border border-gray-100 overflow-hidden"
+              >
+                <div class="px-5 py-4 border-b border-gray-50">
+                  <h2 class="font-bold text-gray-900 text-sm">
+                    Platform Activity — Last 7 Days
+                  </h2>
+                </div>
+                <div class="p-5" style="height: 240px">
+                  <canvas id="actChart"></canvas>
+                </div>
+              </div>
+              <div
+                class="bg-white rounded-2xl border border-gray-100 overflow-hidden"
+              >
+                <div class="px-5 py-4 border-b border-gray-50">
+                  <h2 class="font-bold text-gray-900 text-sm">
+                    Top Users by Study Hours
+                  </h2>
+                </div>
+                <div id="topUsersList" class="p-2"></div>
+              </div>
+            </div>
+            <div
+              class="bg-white rounded-2xl border border-gray-100 overflow-hidden"
+            >
+              <div class="px-5 py-4 border-b border-gray-50">
+                <h2 class="font-bold text-gray-900 text-sm">
+                  Recent Platform Activity
+                </h2>
+              </div>
+              <div
+                id="recentAdminActivity"
+                class="divide-y divide-gray-100 max-h-96 overflow-y-auto"
+              ></div>
+            </div>
+          </div>
+
+          <div class="page" id="page-users">
+            <div
+              class="bg-white rounded-2xl border border-gray-100 overflow-hidden"
+            >
+              <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                  <thead>
+                    <tr class="border-b border-gray-100">
+                      <th
+                        class="text-left px-5 py-3.5 text-[11px] font-bold text-gray-400 uppercase tracking-wider"
+                      >
+                        User
+                      </th>
+                      <th
+                        class="text-left px-5 py-3.5 text-[11px] font-bold text-gray-400 uppercase tracking-wider"
+                      >
+                        Email
+                      </th>
+                      <th
+                        class="text-left px-5 py-3.5 text-[11px] font-bold text-gray-400 uppercase tracking-wider"
+                      >
+                        Role
+                      </th>
+                      <th
+                        class="text-left px-5 py-3.5 text-[11px] font-bold text-gray-400 uppercase tracking-wider"
+                      >
+                        Joined
+                      </th>
+                      <th
+                        class="text-left px-5 py-3.5 text-[11px] font-bold text-gray-400 uppercase tracking-wider"
+                      >
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody id="usersTable"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div class="page" id="page-allsessions">
+            <div
+              class="bg-white rounded-2xl border border-gray-100 overflow-hidden"
+            >
+              <div
+                class="px-5 py-4 border-b border-gray-50 flex items-center justify-between"
+              >
+                <p id="sessCount" class="text-sm text-gray-400"></p>
+              </div>
+              <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                  <thead>
+                    <tr class="border-b border-gray-100">
+                      <th
+                        class="text-left px-5 py-3.5 text-[11px] font-bold text-gray-400 uppercase tracking-wider"
+                      >
+                        Subject
+                      </th>
+                      <th
+                        class="text-left px-5 py-3.5 text-[11px] font-bold text-gray-400 uppercase tracking-wider"
+                      >
+                        Duration
+                      </th>
+                      <th
+                        class="text-left px-5 py-3.5 text-[11px] font-bold text-gray-400 uppercase tracking-wider"
+                      >
+                        Date
+                      </th>
+                      <th
+                        class="text-left px-5 py-3.5 text-[11px] font-bold text-gray-400 uppercase tracking-wider"
+                      >
+                        User
+                      </th>
+                      <th
+                        class="text-left px-5 py-3.5 text-[11px] font-bold text-gray-400 uppercase tracking-wider"
+                      >
+                        Notes
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody id="allSessionsTable"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div class="page" id="page-analytics">
+            <div class="grid grid-cols-1 xl:grid-cols-[1fr_380px] gap-4 mb-4">
+              <div
+                class="bg-white rounded-2xl border border-gray-100 overflow-hidden"
+              >
+                <div class="px-5 py-4 border-b border-gray-50">
+                  <h2 class="font-bold text-gray-900 text-sm">
+                    Study Hours Trend — 14 Days
+                  </h2>
+                </div>
+                <div class="p-5" style="height: 260px">
+                  <canvas id="trendChart"></canvas>
+                </div>
+              </div>
+              <div
+                class="bg-white rounded-2xl border border-gray-100 overflow-hidden"
+              >
+                <div class="px-5 py-4 border-b border-gray-50">
+                  <h2 class="font-bold text-gray-900 text-sm">
+                    Subject Distribution
+                  </h2>
+                </div>
+                <div class="p-5 flex flex-col items-center">
+                  <div style="width: 160px; height: 160px">
+                    <canvas id="adminDonut"></canvas>
+                  </div>
+                  <div id="adminLegend" class="w-full mt-4 space-y-2"></div>
+                </div>
+              </div>
+            </div>
+            <div
+              class="bg-white rounded-2xl border border-gray-100 overflow-hidden"
+            >
+              <div class="px-5 py-4 border-b border-gray-50">
+                <h2 class="font-bold text-gray-900 text-sm">
+                  Sessions per User
+                </h2>
+              </div>
+              <div class="p-5" style="height: 200px">
+                <canvas id="spuChart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TOAST -->
+    <div
+      id="toast"
+      class="toast fixed bottom-6 right-6 bg-gray-900 text-white px-5 py-3 rounded-xl text-sm font-semibold z-[9999] opacity-0 translate-y-2 pointer-events-none flex items-center gap-2 shadow-xl"
+    ></div>
+
+    <script>
+      const BASE_API = window.location.origin.startsWith("file:")
+        ? "http://127.0.0.1:8000"
+        : "";
+      const SK = { user: "st2_user", auth: "st2_auth" };
+      const COLORS = [
+        "#6c5ce7",
+        "#00b894",
+        "#0984e3",
+        "#e05575",
+        "#e67e22",
+        "#a29bfe",
+      ];
+      const ld = (k, d) => {
+        try {
+          const v = localStorage.getItem(k);
+          return v ? JSON.parse(v) : d;
+        } catch {
+          return d;
+        }
+      };
+      const sv = (k, v) => localStorage.setItem(k, JSON.stringify(v));
+      const rm = (k) => localStorage.removeItem(k);
+
+      let currentUser = ld(SK.user, null);
+      let auth = ld(SK.auth, null);
+      let allUsers = [];
+      let allSessions = [];
+      let allSubjects = [];
+      let allGoals = [];
+      let actChartInst = null;
+      let trendInst = null;
+      let donutInst = null;
+      let spuInst = null;
+
+      function fmtDate(value) {
+        if (!value) return "—";
+        const d = new Date(value);
+        if (Number.isNaN(d.getTime())) return value;
+        return d.toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        });
+      }
+      function roundValue(value) {
+        return Math.round((Number(value) || 0) * 10) / 10;
+      }
+      function showToast(message) {
+        const toast = document.getElementById("toast");
+        toast.textContent = message;
+        toast.classList.remove("opacity-0", "translate-y-2");
+        toast.classList.add("opacity-100", "translate-y-0");
+        setTimeout(() => {
+          toast.classList.add("opacity-0", "translate-y-2");
+        }, 3000);
+      }
+      function doLogout() {
+        const logoutBtn = document.querySelector(".logout-button");
+        if (logoutBtn) logoutBtn.classList.add("logout-active");
+        rm(SK.user);
+        rm(SK.auth);
+        showToast("Logging out…");
+        setTimeout(() => (window.location.href = "login.html"), 800);
+      }
+
+      function parseDateString(value) {
+        if (!value) return null;
+        const date = new Date(value);
+        return Number.isNaN(date.getTime()) ? null : date;
+      }
+      function isRecentUser(createdAt) {
+        const date = parseDateString(createdAt);
+        if (!date) return false;
+        const diffDays = (Date.now() - date.getTime()) / 864e5;
+        return diffDays <= 7;
+      }
+
+      async function apiGet(path, params = {}) {
+        const url = new URL(path, BASE_API || window.location.origin);
+        Object.entries(params).forEach(([key, value]) => {
+          if (value !== undefined && value !== null)
+            url.searchParams.set(key, value);
+        });
+        const response = await fetch(url.href);
+        if (!response.ok) {
+          const error = await response
+            .json()
+            .catch(() => ({ message: "Request failed" }));
+          throw new Error(error.message || response.statusText);
+        }
+        return response.json();
+      }
+
+      async function fetchUsers() {
+        const data = await apiGet("/api/users");
+        return Array.isArray(data.users) ? data.users : [];
+      }
+      async function fetchUserSessions(userId) {
+        const data = await apiGet("/api/sessions", { user_id: userId });
+        return Array.isArray(data.sessions) ? data.sessions : [];
+      }
+      async function fetchUserSubjects(userId) {
+        const data = await apiGet("/api/subjects", { user_id: userId });
+        return Array.isArray(data.subjects) ? data.subjects : [];
+      }
+      async function fetchUserGoals(userId) {
+        const data = await apiGet("/api/goals", { user_id: userId });
+        return Array.isArray(data.goals) ? data.goals : [];
+      }
+
+      async function loadPlatformData() {
+        try {
+          const users = await fetchUsers();
+          allUsers = users.map((u) => ({
+            ...u,
+            joinedAt: u.created_at || u.joined || null,
+            displayName: u.name || u.email || "Unknown",
+          }));
+          allSessions = [];
+          allSubjects = [];
+          allGoals = [];
+
+          await Promise.all(
+            allUsers.map(async (user) => {
+              const [sessions, subjects, goals] = await Promise.all([
+                fetchUserSessions(user.id),
+                fetchUserSubjects(user.id),
+                fetchUserGoals(user.id),
+              ]);
+              sessions.forEach((session) => {
+                allSessions.push({
+                  ...session,
+                  duration: roundValue(session.duration),
+                  userId: user.id,
+                  userName: user.displayName,
+                  userEmail: user.email,
+                });
+              });
+              subjects.forEach((subject) =>
+                allSubjects.push({ ...subject, userId: user.id }),
+              );
+              goals.forEach((goal) =>
+                allGoals.push({ ...goal, userId: user.id }),
+              );
+            }),
+          );
+        } catch (error) {
+          console.error(error);
+          showToast(error.message || "Unable to load admin data.");
+        }
+      }
+
+      function getTotalUsers() {
+        return allUsers.length;
+      }
+      function getNewUsers() {
+        return allUsers.filter((u) => isRecentUser(u.joinedAt)).length;
+      }
+      function getTotalHours() {
+        return roundValue(
+          allSessions.reduce((sum, s) => sum + Number(s.duration || 0), 0),
+        );
+      }
+      function getActiveGoals() {
+        return allGoals.length;
+      }
+      function getSubjectCount() {
+        const unique = new Set(allSubjects.map((s) => s.name || `${s.id}`));
+        return unique.size;
+      }
+      function getUserSummary() {
+        const summary = new Map();
+        allUsers.forEach((user) =>
+          summary.set(user.id, { user, hours: 0, sessions: 0 }),
+        );
+        allSessions.forEach((session) => {
+          const entry = summary.get(session.userId);
+          if (entry) {
+            entry.hours += Number(session.duration || 0);
+            entry.sessions += 1;
+          }
+        });
+        return Array.from(summary.values()).sort((a, b) => b.hours - a.hours);
+      }
+      function getRecentActivity() {
+        return [...allSessions]
+          .sort((a, b) => {
+            const da = a.session_date ? a.session_date : a.date;
+            const db = b.session_date ? b.session_date : b.date;
+            return db.localeCompare(da);
+          })
+          .slice(0, 6);
+      }
+
+      function updatePageMeta(page) {
+        const titleEl = document.getElementById("pageTitle");
+        const subEl = document.getElementById("pageSub");
+        if (page === "overview") {
+          titleEl.textContent = "Admin Overview";
+          subEl.textContent = "";
+        } else if (page === "users") {
+          titleEl.textContent = "Users";
+          subEl.textContent = `${getTotalUsers()} `;
+        } else if (page === "allsessions") {
+          titleEl.textContent = "All Sessions";
+          subEl.textContent = `${allSessions.length} `;
+        } else if (page === "analytics") {
+          titleEl.textContent = "Analytics";
+          subEl.textContent = "";
+        }
+      }
+
+      async function nav(page, btn) {
+        document
+          .querySelectorAll(".page")
+          .forEach((p) => p.classList.remove("active"));
+        document.getElementById("page-" + page)?.classList.add("active");
+        document
+          .querySelectorAll(".nav-btn")
+          .forEach((b) => b.classList.remove("nav-active"));
+        if (btn) btn.classList.add("nav-active");
+        updatePageMeta(page);
+        if (!allUsers.length) {
+          await loadPlatformData();
+        }
+        if (page === "overview") renderOverview();
+        if (page === "users") renderUsers();
+        if (page === "allsessions") renderAllSessions();
+        if (page === "analytics") renderAnalytics();
+      }
+
+      function renderOverview() {
+        document.getElementById("ov-users").textContent = getTotalUsers();
+        document.getElementById("ov-new-users").textContent = getNewUsers();
+        document.getElementById("ov-hours").textContent = `${getTotalHours()}h`;
+        document.getElementById("ov-goals").textContent = getActiveGoals();
+        document.getElementById("ov-subjects").textContent = getSubjectCount();
+        const badge = document.getElementById("usersNavBadge");
+        const newUsers = getNewUsers();
+        if (newUsers > 0) {
+          badge.textContent = `${newUsers} New`;
+          badge.classList.remove("hidden");
+        } else {
+          badge.classList.add("hidden");
+        }
+
+        const now = new Date();
+        const labels = [];
+        const data = [];
+        for (let i = 6; i >= 0; i--) {
+          const d = new Date(now);
+          d.setDate(d.getDate() - i);
+          const iso = d.toISOString().slice(0, 10);
+          labels.push(
+            ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][d.getDay()],
+          );
+          const hrs = allSessions
+            .filter((s) => (s.session_date || s.date) === iso)
+            .reduce((sum, s) => sum + Number(s.duration || 0), 0);
+          data.push(roundValue(hrs));
+        }
+        if (actChartInst) {
+          actChartInst.destroy();
+        }
+        actChartInst = new Chart(
+          document.getElementById("actChart").getContext("2d"),
+          {
+            type: "bar",
+            data: {
+              labels,
+              datasets: [
+                {
+                  label: "Study Hours",
+                  data,
+                  backgroundColor: "#6c5ce7",
+                  borderColor: "#5c4ace",
+                  borderWidth: 1,
+                  borderRadius: 8,
+                  borderSkipped: false,
+                  hoverBackgroundColor: "#7c6cf7",
+                  hoverBorderColor: "#6c5ce7",
+                },
+              ],
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: {
+                  display: true,
+                  position: "top",
+                  labels: {
+                    font: { size: 12, family: "Inter" },
+                    color: "#6b7280",
+                    padding: 15,
+                    usePointStyle: true,
+                  },
+                },
+                tooltip: {
+                  callbacks: {
+                    label: (ctx) => `${ctx.parsed.y}h`,
+                    title: (ctx) => `${ctx[0].label}`,
+                  },
+                  backgroundColor: "rgba(0,0,0,0.8)",
+                  titleFont: { size: 12 },
+                  bodyFont: { size: 12 },
+                  padding: 8,
+                  displayColors: false,
+                },
+              },
+              scales: {
+                x: {
+                  grid: { display: false },
+                  ticks: {
+                    font: { size: 12, family: "Inter", weight: "500" },
+                    color: "#6b7280",
+                  },
+                },
+                y: {
+                  grid: { color: "#e5e7eb", drawBorder: false },
+                  ticks: {
+                    font: { size: 11, family: "Inter" },
+                    color: "#9ca3af",
+                    stepSize: 5,
+                    callback: (value) => `${value}h`,
+                  },
+                  beginAtZero: true,
+                },
+              },
+              animation: { duration: 600 },
+            },
+          },
+        );
+
+        const topUsers = getUserSummary().slice(0, 4);
+        document.getElementById("topUsersList").innerHTML =
+          topUsers
+            .map(
+              (entry, index) => `
+    <div class="flex items-center gap-3 px-3 py-3">
+      <span class="text-xs font-bold text-gray-300 w-5 text-center">${index + 1}</span>
+      <span class="flex-1 text-sm text-gray-800 font-medium">${entry.user.displayName}</span>
+      <span class="text-sm font-bold text-violet-600">${entry.hours}h</span>
+    </div>
+  `,
+            )
+            .join("") ||
+          '<div class="px-3 py-3 text-sm text-gray-500">No activity yet.</div>';
+
+        const recent = getRecentActivity();
+        document.getElementById("recentAdminActivity").innerHTML =
+          recent
+            .map(
+              (session) => `
+    <div class="px-5 py-4">
+      <div class="flex items-center justify-between gap-3">
+        <div>
+          <p class="text-sm font-semibold text-gray-900">${session.subject_name || session.subject || "Session"}</p>
+          <p class="text-xs text-gray-400">${session.userName} • ${fmtDate(session.session_date || session.date)}</p>
+        </div>
+        <span class="text-xs font-bold text-violet-600">${session.duration}h</span>
+      </div>
+      <p class="mt-2 text-sm text-gray-500 truncate">${session.notes || "No notes added."}</p>
+    </div>
+  `,
+            )
+            .join("") ||
+          '<div class="px-5 py-4 text-sm text-gray-500">No recent activity available.</div>';
+      }
+
+      function renderUsers() {
+        document.getElementById("usersTable").innerHTML =
+          allUsers
+            .map((user) => {
+              const isNew = isRecentUser(user.joinedAt);
+              const initial = (user.displayName || "U").charAt(0).toUpperCase();
+              return `
+      <tr class="hover:bg-gray-50 transition-colors">
+        <td class="px-5 py-4">
+          <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-full bg-violet-100 flex items-center justify-center text-violet-600 text-xs font-bold flex-shrink-0">${initial}</div>
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="font-semibold text-gray-900 text-sm">${user.displayName}</span>
+                ${isNew ? '<span class="text-[11px] font-bold text-white bg-emerald-500 px-2 py-0.5 rounded-full">New</span>' : ""}
+              </div>
+              <span class="text-[11px] text-gray-400">Joined ${fmtDate(user.joinedAt)}</span>
+            </div>
+          </div>
+        </td>
+        <td class="px-5 py-4 text-gray-500 text-sm">${user.email || "—"}</td>
+        <td class="px-5 py-4">
+          <span class="${user.role === "admin" ? "bg-red-50 text-red-600" : "bg-violet-50 text-violet-600"} text-[11px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1 w-fit"><i class="fas fa-circle text-[7px]"></i> ${user.role || "user"}</span>
+        </td>
+        <td class="px-5 py-4 text-gray-400 text-sm">${fmtDate(user.joinedAt)}</td>
+        <td class="px-5 py-4">
+          <span class="text-gray-400 text-sm">—</span>
+        </td>
+      </tr>`;
+            })
+            .join("") ||
+          '<tr><td colspan="5" class="px-5 py-10 text-center text-sm text-gray-400">No users found.</td></tr>';
+      }
+
+      function renderAllSessions() {
+        const sessions = [...allSessions].sort((a, b) => {
+          const da = (b.session_date || b.date || "") + (b.subject_name || "");
+          const db = (a.session_date || a.date || "") + (a.subject_name || "");
+          return da.localeCompare(db);
+        });
+        document.getElementById("sessCount").textContent =
+          `${sessions.length} sessions across all users`;
+        document.getElementById("allSessionsTable").innerHTML =
+          sessions
+            .map(
+              (session) => `
+    <tr class="hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-0">
+      <td class="px-5 py-4">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-xl bg-violet-50 flex items-center justify-center flex-shrink-0">
+            <i class="fas fa-clock text-violet-500 text-xs"></i>
+          </div>
+          <span class="font-semibold text-gray-900">${session.subject_name || session.subject || "Subject"}</span>
+        </div>
+      </td>
+      <td class="px-5 py-4 font-bold text-gray-900">${session.duration}h</td>
+      <td class="px-5 py-4 text-gray-500">${fmtDate(session.session_date || session.date)}</td>
+      <td class="px-5 py-4 text-gray-500">${session.userEmail || session.userName || "Unknown"}</td>
+      <td class="px-5 py-4 text-gray-400 max-w-xs truncate">${session.notes || "—"}</td>
+    </tr>`,
+            )
+            .join("") ||
+          '<tr><td colspan="5" class="px-5 py-10 text-center text-sm text-gray-400">No sessions recorded.</td></tr>';
+      }
+
+      function renderAnalytics() {
+        const now = new Date();
+        const trendLabels = [];
+        const trendData = [];
+        for (let i = 13; i >= 0; i--) {
+          const d = new Date(now);
+          d.setDate(d.getDate() - i);
+          const iso = d.toISOString().slice(0, 10);
+          trendLabels.push(
+            i % 2 === 0
+              ? d.toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                })
+              : "",
+          );
+          const total = allSessions
+            .filter((s) => (s.session_date || s.date) === iso)
+            .reduce((sum, s) => sum + Number(s.duration || 0), 0);
+          trendData.push(roundValue(total));
+        }
+        if (trendInst) {
+          trendInst.destroy();
+        }
+        trendInst = new Chart(
+          document.getElementById("trendChart").getContext("2d"),
+          {
+            type: "line",
+            data: {
+              labels: trendLabels,
+              datasets: [
+                {
+                  data: trendData,
+                  borderColor: "#6c5ce7",
+                  borderWidth: 2,
+                  pointRadius: trendData.map((v) => (v ? 4 : 0)),
+                  pointBackgroundColor: "#6c5ce7",
+                  fill: true,
+                  backgroundColor: (ctx) => {
+                    const g = ctx.chart.ctx.createLinearGradient(
+                      0,
+                      0,
+                      0,
+                      ctx.chart.height,
+                    );
+                    g.addColorStop(0, "rgba(108,92,231,.15)");
+                    g.addColorStop(1, "rgba(108,92,231,.01)");
+                    return g;
+                  },
+                  tension: 0.4,
+                },
+              ],
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: { display: false },
+                tooltip: { callbacks: { label: (c) => `${c.parsed.y}h` } },
+              },
+              scales: {
+                x: {
+                  grid: { display: false },
+                  ticks: {
+                    font: { size: 10, family: "Inter" },
+                    color: "#9ca3af",
+                  },
+                },
+                y: {
+                  grid: { color: "#f9fafb" },
+                  ticks: {
+                    font: { size: 10, family: "Inter" },
+                    color: "#9ca3af",
+                  },
+                  beginAtZero: true,
+                },
+              },
+              animation: { duration: 700 },
+            },
+          },
+        );
+
+        const subjectMap = new Map();
+        allSessions.forEach((session) => {
+          const name = session.subject_name || session.subject || "Unknown";
+          subjectMap.set(
+            name,
+            (subjectMap.get(name) || 0) + Number(session.duration || 0),
+          );
+        });
+        const sortedSubj = Array.from(subjectMap.entries()).sort(
+          (a, b) => b[1] - a[1],
+        );
+        if (donutInst) {
+          donutInst.destroy();
+        }
+        donutInst = new Chart(
+          document.getElementById("adminDonut").getContext("2d"),
+          {
+            type: "doughnut",
+            data: {
+              labels: sortedSubj.map(([name]) => name),
+              datasets: [
+                {
+                  data: sortedSubj.map(([, value]) => value),
+                  backgroundColor: sortedSubj.map(
+                    (_, index) => COLORS[index % COLORS.length],
+                  ),
+                  borderWidth: 0,
+                  hoverOffset: 4,
+                },
+              ],
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              cutout: "70%",
+              plugins: { legend: { display: false } },
+              animation: { duration: 700 },
+            },
+          },
+        );
+        document.getElementById("adminLegend").innerHTML =
+          sortedSubj
+            .map(
+              ([name, value], index) => `
+    <div class="flex items-center gap-2 text-xs">
+      <div class="w-2.5 h-2.5 rounded-full flex-shrink-0" style="background:${COLORS[index % COLORS.length]}"></div>
+      <span class="flex-1 text-gray-500">${name}</span>
+      <span class="font-bold text-gray-900">${roundValue(value)}h</span>
+    </div>`,
+            )
+            .join("") ||
+          '<div class="text-sm text-gray-500">No subject data available.</div>';
+
+        const usersForSPU = getUserSummary().slice(0, 6);
+        if (spuInst) {
+          spuInst.destroy();
+        }
+        spuInst = new Chart(
+          document.getElementById("spuChart").getContext("2d"),
+          {
+            type: "bar",
+            data: {
+              labels: usersForSPU.map(
+                (entry) => entry.user.email || entry.user.displayName,
+              ),
+              datasets: [
+                {
+                  data: usersForSPU.map((entry) => entry.sessions),
+                  backgroundColor: "#6c5ce7",
+                  borderRadius: 6,
+                  borderSkipped: false,
+                  barThickness: 40,
+                },
+              ],
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: { display: false },
+                tooltip: {
+                  callbacks: { label: (c) => `${c.parsed.y} sessions` },
+                },
+              },
+              scales: {
+                x: {
+                  grid: { display: false },
+                  ticks: {
+                    font: { size: 12, family: "Inter" },
+                    color: "#374151",
+                  },
+                },
+                y: {
+                  grid: { color: "#f9fafb" },
+                  ticks: {
+                    stepSize: 1,
+                    font: { size: 11, family: "Inter" },
+                    color: "#9ca3af",
+                  },
+                  beginAtZero: true,
+                },
+              },
+              animation: { duration: 600 },
+            },
+          },
+        );
+      }
+
+      function toggleSidebar(open) {
+        const sidebar = document.getElementById("sidebar");
+        const backdrop = document.getElementById("sidebarBackdrop");
+        if (open) {
+          sidebar.classList.add("open");
+          backdrop.classList.remove("hidden");
+          backdrop.classList.remove("opacity-0");
+          backdrop.classList.add("opacity-100");
+        } else {
+          sidebar.classList.remove("open");
+          backdrop.classList.add("opacity-0");
+          backdrop.classList.add("hidden");
+        }
+      }
+      function toggleSidebarSize() {
+        const sidebar = document.getElementById("sidebar");
+        const icon = document.getElementById("sidebarShrinkIcon");
+        sidebar.classList.toggle("collapsed");
+        icon.classList.toggle("fa-chevron-left");
+        icon.classList.toggle("fa-chevron-right");
+      }
+
+      (async () => {
+        if (!currentUser || !auth || auth.role !== "admin") {
+          currentUser = ld(SK.user, {
+            name: "Admin",
+            email: "admin@example.com",
+          });
+          auth = ld(SK.auth, { role: "admin" });
+        }
+        document.getElementById("sbName").textContent =
+          currentUser.name || "Admin";
+        document.getElementById("sbAvatar").textContent = (
+          currentUser.name ||
+          currentUser.email ||
+          "A"
+        )
+          .charAt(0)
+          .toUpperCase();
+        await loadPlatformData();
+        renderOverview();
+      })();
+    </script>
+  </body>
+</html>

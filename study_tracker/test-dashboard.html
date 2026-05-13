@@ -1,0 +1,259 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Test Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
+  </head>
+  <body class="bg-gray-50 p-8">
+    <div class="max-w-6xl mx-auto">
+      <h1 class="text-3xl font-bold mb-6">📊 Test Dashboard (No Auth Check)</h1>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <div class="bg-white rounded-lg shadow p-6">
+          <h2 class="text-xl font-bold mb-4">Auth Data</h2>
+          <pre
+            id="authData"
+            class="bg-gray-100 p-4 rounded overflow-auto text-sm"
+          ></pre>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-6">
+          <h2 class="text-xl font-bold mb-4">User Data</h2>
+          <pre
+            id="userData"
+            class="bg-gray-100 p-4 rounded overflow-auto text-sm"
+          ></pre>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-6">
+          <h2 class="text-xl font-bold mb-4">Sessions</h2>
+          <pre
+            id="sessionData"
+            class="bg-gray-100 p-4 rounded overflow-auto text-sm"
+          ></pre>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-6">
+          <h2 class="text-xl font-bold mb-4">Subjects</h2>
+          <pre
+            id="subjectData"
+            class="bg-gray-100 p-4 rounded overflow-auto text-sm"
+          ></pre>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-lg shadow p-6 mb-6">
+        <h2 class="text-xl font-bold mb-4">All LocalStorage Keys</h2>
+        <div id="allKeys" class="grid grid-cols-4 gap-2"></div>
+      </div>
+
+      <div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-xl font-bold mb-4">Actions</h2>
+        <button
+          onclick="setupTestData()"
+          class="bg-blue-600 text-white px-4 py-2 rounded mr-2"
+        >
+          Setup Test Data
+        </button>
+        <button
+          onclick="clearData()"
+          class="bg-red-600 text-white px-4 py-2 rounded mr-2"
+        >
+          Clear All Data
+        </button>
+        <button
+          onclick="location.href = 'index.html'"
+          class="bg-green-600 text-white px-4 py-2 rounded"
+        >
+          Go to User Dashboard
+        </button>
+        <button
+          onclick="location.href = 'admin-dashboard.html'"
+          class="bg-purple-600 text-white px-4 py-2 rounded"
+        >
+          Go to Admin Dashboard
+        </button>
+      </div>
+    </div>
+
+    <script>
+      const SK = { user: "st2_user", auth: "st2_auth" };
+      const ld = (k, d) => {
+        try {
+          const v = localStorage.getItem(k);
+          return v ? JSON.parse(v) : d;
+        } catch {
+          return d;
+        }
+      };
+
+      function display() {
+        document.getElementById("authData").textContent = JSON.stringify(
+          ld(SK.auth, {}),
+          null,
+          2,
+        );
+        document.getElementById("userData").textContent = JSON.stringify(
+          ld(SK.user, {}),
+          null,
+          2,
+        );
+        document.getElementById("sessionData").textContent = JSON.stringify(
+          ld("st2_sessions", []),
+          null,
+          2,
+        ).substring(0, 300);
+        document.getElementById("subjectData").textContent = JSON.stringify(
+          ld("st2_subjects", []),
+          null,
+          2,
+        ).substring(0, 300);
+
+        const allKeysDiv = document.getElementById("allKeys");
+        allKeysDiv.innerHTML = "";
+        Object.keys(localStorage).forEach((key) => {
+          const span = document.createElement("span");
+          span.className =
+            "bg-blue-100 text-blue-900 px-3 py-1 rounded text-sm font-mono";
+          span.textContent = key;
+          allKeysDiv.appendChild(span);
+        });
+      }
+
+      function setupTestData() {
+        const users = [
+          {
+            id: 1,
+            name: "John Doe",
+            email: "john@example.com",
+            role: "user",
+            created_at: "2026-05-01",
+          },
+          {
+            id: 2,
+            name: "Admin User",
+            email: "admin@example.com",
+            role: "admin",
+            created_at: "2026-05-01",
+          },
+        ];
+        localStorage.setItem("st2_users", JSON.stringify(users));
+        localStorage.setItem(
+          "st2_auth",
+          JSON.stringify({ token: "user", role: "user" }),
+        );
+        localStorage.setItem(
+          "st2_user",
+          JSON.stringify({
+            id: 1,
+            name: "John Doe",
+            email: "john@example.com",
+          }),
+        );
+
+        const sessions = [
+          {
+            id: 1,
+            subject: "Math",
+            duration: 2.5,
+            date: "2026-05-13",
+            notes: "Calculus practice",
+          },
+          {
+            id: 2,
+            subject: "English",
+            duration: 1.5,
+            date: "2026-05-13",
+            notes: "Essay writing",
+          },
+          {
+            id: 3,
+            subject: "Science",
+            duration: 2,
+            date: "2026-05-12",
+            notes: "Physics labs",
+          },
+        ];
+        localStorage.setItem("st2_sessions", JSON.stringify(sessions));
+
+        const subjects = [
+          {
+            id: 1,
+            name: "Math",
+            category: "Science",
+            monthly_goal: 20,
+            total_time: 10.5,
+          },
+          {
+            id: 2,
+            name: "English",
+            category: "Literature",
+            monthly_goal: 15,
+            total_time: 5.5,
+          },
+          {
+            id: 3,
+            name: "Science",
+            category: "Natural Science",
+            monthly_goal: 18,
+            total_time: 4.0,
+          },
+        ];
+        localStorage.setItem("st2_subjects", JSON.stringify(subjects));
+
+        const goals = [
+          {
+            id: 1,
+            type: "Weekly Hours",
+            target: 20,
+            current: 6,
+            deadline: "2026-05-18",
+          },
+          {
+            id: 2,
+            type: "Monthly Hours",
+            target: 80,
+            current: 20,
+            deadline: "2026-05-31",
+          },
+        ];
+        localStorage.setItem("st2_goals", JSON.stringify(goals));
+
+        const notes = [
+          {
+            id: 1,
+            title: "Calculus Notes",
+            subject_name: "Math",
+            content: "Derivatives and integrals",
+            priority: "high",
+          },
+          {
+            id: 2,
+            title: "Essay Tips",
+            subject_name: "English",
+            content: "Structure and flow",
+            priority: "medium",
+          },
+        ];
+        localStorage.setItem("st2_notes", JSON.stringify(notes));
+
+        alert("✓ Test data setup complete!");
+        display();
+      }
+
+      function clearData() {
+        localStorage.clear();
+        alert("✓ LocalStorage cleared");
+        display();
+      }
+
+      // Initial display
+      display();
+    </script>
+  </body>
+</html>
