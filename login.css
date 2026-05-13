@@ -1,0 +1,26 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+body{margin:0;min-height:100vh;font-family:'Inter',system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:radial-gradient(circle at top,#7c3aed 0%,#312e81 38%,#111827 100%);color:#f8fafc;display:flex;align-items:center;justify-content:center}
+*{box-sizing:border-box}
+.container{width:min(480px,calc(100vw-32px));background:rgba(15,23,42,.95);border:1px solid rgba(148,163,184,.12);border-radius:28px;box-shadow:0 40px 120px rgba(15,23,42,.35);padding:36px;}
+.logo{display:inline-flex;align-items:center;gap:0.85rem;padding:0.75rem 1rem;border-radius:18px;background:rgba(115,105,255,.15);color:#e0e7ff;font-weight:700;font-size:0.95rem;}
+.logo span{display:inline-flex;width:2.25rem;height:2.25rem;border-radius:16px;align-items:center;justify-content:center;background:linear-gradient(135deg,#8b5cf6,#4f46e5);font-size:0.95rem;color:#fff}
+h1{margin:1.75rem 0 0.5rem;font-size:2rem;line-height:1.1;color:#f8fafc;}
+p.subtitle{margin:0 0 1.75rem;color:#cbd5e1;line-height:1.6;}
+.form-group{margin-bottom:1.15rem}
+.label{display:block;margin-bottom:0.45rem;font-size:0.82rem;font-weight:600;color:#cbd5e1;letter-spacing:0.01em}
+.input, .radio-card, .radio-card input{width:100%;font:inherit}
+.input{padding:0.95rem 1rem;border-radius:16px;border:1px solid rgba(148,163,184,.18);background:#0f172a;color:#f8fafc;outline:none;transition:all .2s ease}
+.input:focus{border-color:#8b5cf6;box-shadow:0 0 0 4px rgba(124,58,237,.18)}
+.radio-row{display:grid;grid-template-columns:1fr 1fr;gap:0.85rem;margin-top:0.75rem}
+.radio-card{position:relative;padding:1rem;border-radius:18px;border:1px solid rgba(148,163,184,.18);background:#111827;color:#f8fafc;cursor:pointer;transition:all .2s ease}
+.radio-card:hover{border-color:rgba(124,58,237,.4);transform:translateY(-1px)}
+.radio-card input{position:absolute;opacity:0;pointer-events:none}
+.radio-card.selected{border-color:#8b5cf6;background:rgba(124,58,237,.12)}
+.radio-card .radio-label{display:flex;align-items:center;gap:0.75rem;font-size:0.95rem;font-weight:600}
+.button{width:100%;padding:1rem;border:none;border-radius:18px;font-size:0.95rem;font-weight:700;color:#fff;background:linear-gradient(135deg,#7c3aed,#4f46e5);cursor:pointer;transition:transform .2s ease,filter .2s ease}
+.button:hover{transform:translateY(-1px);filter:brightness(1.05)}
+.error{margin-top:1rem;color:#fca5a5;font-size:0.9rem;min-height:1.2rem}
+.footer{margin-top:1.5rem;font-size:0.85rem;color:#94a3b8;text-align:center;}
+.footer a{color:#c4b5fd;text-decoration:none}
+@media (max-width:500px){.container{padding:26px;border-radius:24px}}

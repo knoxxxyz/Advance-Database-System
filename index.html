@@ -1,0 +1,1933 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Study Tracker – Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
+    <style>
+      body {
+        font-family: "Inter", system-ui, sans-serif;
+      }
+      .sidebar {
+        background: #1e1b4b;
+      }
+      .sidebar-panel {
+        transform: translateX(-100%);
+        transition: transform 0.25s ease;
+      }
+      .sidebar-panel.open {
+        transform: translateX(0);
+      }
+      .sidebar-backdrop {
+        transition: opacity 0.25s ease;
+      }
+      .nav-active {
+        background: rgba(99, 91, 234, 0.3);
+        color: #fff !important;
+      }
+      .page {
+        display: none;
+      }
+      .page.active {
+        display: block;
+      }
+      input,
+      select,
+      textarea {
+        outline: none;
+      }
+      input:focus,
+      select:focus,
+      textarea:focus {
+        border-color: #6c5ce7 !important;
+        box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.15);
+      }
+      .modal-overlay {
+        backdrop-filter: blur(3px);
+      }
+      ::-webkit-scrollbar {
+        width: 5px;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #d1d5db;
+        border-radius: 3px;
+      }
+      .toast {
+        transition:
+          opacity 0.3s,
+          transform 0.3s;
+      }
+      .btn-hover:hover {
+        transform: translateY(-1px);
+      }
+      .card-hover:hover {
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        transform: translateY(-1px);
+      }
+      .transition-all {
+        transition: all 0.2s;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-50 overflow-hidden">
+    <!-- APP -->
+    <div class="flex h-screen w-screen">
+      <!-- SIDEBAR -->
+      <div
+        id="sidebar"
+        class="sidebar sidebar-panel fixed inset-y-0 left-0 z-50 w-72 lg:w-60 flex flex-col h-full overflow-hidden lg:static lg:translate-x-0 lg:flex-shrink-0 lg:flex"
+      >
+        <!-- Brand -->
+        <div
+          class="flex items-center justify-between gap-3 px-5 py-5 border-b border-white/10"
+        >
+          <div class="flex items-center gap-3">
+            <div
+              class="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500 to-indigo-400 flex items-center justify-center flex-shrink-0"
+            >
+              <i class="fas fa-book-open text-white text-sm"></i>
+            </div>
+            <span class="text-white font-bold text-[15px]">Study Tracker</span>
+          </div>
+          <button
+            onclick="toggleSidebar(false)"
+            class="lg:hidden inline-flex items-center justify-center w-9 h-9 rounded-2xl bg-white/10 text-white hover:bg-white/20"
+            aria-label="Close navigation"
+          >
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+
+        <!-- Nav -->
+        <div class="flex-1 px-3 py-3 overflow-y-auto space-y-0.5">
+          <p
+            class="text-[10px] font-bold text-white/30 uppercase tracking-widest px-3 pt-3 pb-2"
+          >
+            Main
+          </p>
+          <button
+            onclick="nav('dashboard', this)"
+            class="nav-btn nav-active w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13.5px] font-medium text-white/60 transition-all"
+          >
+            <i class="fas fa-th-large w-4 text-center text-sm"></i> Dashboard
+          </button>
+          <button
+            onclick="nav('sessions', this)"
+            class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13.5px] font-medium text-white/60 hover:bg-white/7 hover:text-white/90 transition-all"
+          >
+            <i class="fas fa-clock w-4 text-center text-sm"></i> Sessions
+          </button>
+          <button
+            onclick="nav('goals', this)"
+            class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13.5px] font-medium text-white/60 hover:bg-white/7 hover:text-white/90 transition-all"
+          >
+            <i class="fas fa-bullseye w-4 text-center text-sm"></i> Goals
+          </button>
+          <button
+            onclick="nav('subjects', this)"
+            class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13.5px] font-medium text-white/60 hover:bg-white/7 hover:text-white/90 transition-all"
+          >
+            <i class="fas fa-book w-4 text-center text-sm"></i> Subjects
+          </button>
+          <button
+            onclick="nav('notes', this)"
+            class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13.5px] font-medium text-white/60 hover:bg-white/7 hover:text-white/90 transition-all"
+          >
+            <i class="fas fa-sticky-note w-4 text-center text-sm"></i> Notes
+          </button>
+          <button
+            onclick="nav('reports', this)"
+            class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13.5px] font-medium text-white/60 hover:bg-white/7 hover:text-white/90 transition-all"
+          >
+            <i class="fas fa-chart-bar w-4 text-center text-sm"></i> Reports
+          </button>
+        </div>
+
+        <!-- Footer -->
+        <div class="px-3 py-3 border-t border-white/10">
+          <div class="flex items-center gap-2.5 px-3 py-2.5 mb-2">
+            <div
+              id="sbAvatar"
+              class="w-8 h-8 rounded-full bg-gradient-to-br from-violet-500 to-indigo-400 flex items-center justify-center text-white font-bold text-xs flex-shrink-0"
+            >
+              S
+            </div>
+            <div>
+              <p id="sbName" class="text-white text-[13px] font-semibold">
+                Salman Alih
+              </p>
+              <p class="text-white/40 text-[11px]">User</p>
+            </div>
+            <i class="fas fa-chevron-left text-white/30 text-xs ml-auto"></i>
+          </div>
+          <button
+            id="logoutBtn"
+            onclick="doLogout()"
+            class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-[13.5px] font-medium text-white/60 hover:bg-white/7 hover:text-white/90 transition-all"
+          >
+            <i class="fas fa-sign-out-alt w-4 text-center text-sm"></i> Logout
+          </button>
+        </div>
+      </div>
+      <div
+        id="sidebarBackdrop"
+        class="sidebar-backdrop fixed inset-0 z-40 bg-black/30 opacity-0 pointer-events-none hidden lg:hidden"
+        onclick="toggleSidebar(false)"
+      ></div>
+
+      <!-- MAIN -->
+      <div class="flex-1 flex flex-col overflow-hidden bg-gray-50">
+        <!-- Topbar -->
+        <div
+          class="flex items-center justify-between gap-4 px-4 py-4 bg-gray-50 flex-shrink-0"
+        >
+          <button
+            onclick="toggleSidebar(true)"
+            class="lg:hidden inline-flex items-center justify-center w-11 h-11 rounded-2xl bg-white border border-gray-200 text-gray-700 shadow-sm"
+            aria-label="Open navigation"
+          >
+            <i class="fas fa-bars"></i>
+          </button>
+          <div class="min-w-0 flex-1">
+            <h1 id="pageTitle" class="text-2xl font-extrabold text-gray-900">
+              Welcome back!
+            </h1>
+            <p id="pageSub" class="text-sm text-gray-400 mt-0.5">
+              Here's your study overview
+            </p>
+          </div>
+          <div id="topbarActions" class="flex items-center gap-2"></div>
+        </div>
+
+        <!-- Content -->
+        <div class="flex-1 overflow-y-auto px-8 py-5">
+          <!-- DASHBOARD -->
+          <div class="page active" id="page-dashboard">
+            <!-- Stats -->
+            <div
+              class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3.5 mb-5"
+            >
+              <div
+                class="bg-white rounded-2xl border border-gray-100 p-5 flex items-start justify-between card-hover transition-all"
+              >
+                <div>
+                  <p
+                    class="text-[10.5px] font-bold text-gray-400 uppercase tracking-wider mb-2.5"
+                  >
+                    Total Study Time
+                  </p>
+                  <p
+                    id="d-total"
+                    class="text-3xl font-extrabold text-gray-900 leading-none mb-1.5"
+                  >
+                    —
+                  </p>
+                  <p class="text-xs text-gray-400">hrs accumulated</p>
+                </div>
+                <div
+                  class="w-9 h-9 rounded-xl bg-violet-50 flex items-center justify-center flex-shrink-0"
+                >
+                  <i class="fas fa-clock text-violet-600 text-sm"></i>
+                </div>
+              </div>
+              <div
+                class="bg-white rounded-2xl border border-gray-100 p-5 flex items-start justify-between card-hover transition-all"
+              >
+                <div>
+                  <p
+                    class="text-[10.5px] font-bold text-gray-400 uppercase tracking-wider mb-2.5"
+                  >
+                    Today
+                  </p>
+                  <p
+                    id="d-today"
+                    class="text-3xl font-extrabold text-gray-900 leading-none mb-1.5"
+                  >
+                    0h
+                  </p>
+                  <p class="text-xs text-gray-400">hrs studied today</p>
+                </div>
+                <div
+                  class="w-9 h-9 rounded-xl bg-teal-50 flex items-center justify-center flex-shrink-0"
+                >
+                  <i class="fas fa-calendar-day text-teal-600 text-sm"></i>
+                </div>
+              </div>
+              <div
+                class="bg-white rounded-2xl border border-gray-100 p-5 flex items-start justify-between card-hover transition-all"
+              >
+                <div>
+                  <p
+                    class="text-[10.5px] font-bold text-gray-400 uppercase tracking-wider mb-2.5"
+                  >
+                    Weekly Goal
+                  </p>
+                  <p
+                    id="d-goal"
+                    class="text-3xl font-extrabold text-gray-900 leading-none mb-1.5"
+                  >
+                    —
+                  </p>
+                  <p class="text-xs text-gray-400">hrs / week target</p>
+                </div>
+                <div
+                  class="w-9 h-9 rounded-xl bg-emerald-50 flex items-center justify-center flex-shrink-0"
+                >
+                  <i class="fas fa-bullseye text-emerald-600 text-sm"></i>
+                </div>
+              </div>
+              <div
+                class="bg-white rounded-2xl border border-gray-100 p-5 flex items-start justify-between card-hover transition-all"
+              >
+                <div>
+                  <p
+                    class="text-[10.5px] font-bold text-gray-400 uppercase tracking-wider mb-2.5"
+                  >
+                    Streak
+                  </p>
+                  <p
+                    id="d-streak"
+                    class="text-3xl font-extrabold text-gray-900 leading-none mb-1.5"
+                  >
+                    0
+                  </p>
+                  <p class="text-xs text-gray-400">days in a row</p>
+                </div>
+                <div
+                  class="w-9 h-9 rounded-xl bg-orange-50 flex items-center justify-center flex-shrink-0"
+                >
+                  <i class="fas fa-fire text-orange-500 text-sm"></i>
+                </div>
+              </div>
+            </div>
+
+            <!-- Bottom Grid -->
+            <div class="grid grid-cols-1 xl:grid-cols-[1fr_320px] gap-3.5">
+              <!-- Recent Activity -->
+              <div
+                class="bg-white rounded-2xl border border-gray-100 overflow-hidden"
+              >
+                <div
+                  class="flex items-center justify-between px-5 py-4 border-b border-gray-50"
+                >
+                  <h2 class="font-bold text-gray-900 text-sm">
+                    Recent Activity
+                  </h2>
+                  <button
+                    onclick="nav('sessions', null)"
+                    class="text-violet-600 text-xs font-medium hover:underline"
+                  >
+                    See all →
+                  </button>
+                </div>
+                <div id="recentActivity"></div>
+              </div>
+
+              <!-- This Week Chart -->
+              <div
+                class="bg-white rounded-2xl border border-gray-100 overflow-hidden"
+              >
+                <div
+                  class="flex items-center justify-between px-5 py-4 border-b border-gray-50"
+                >
+                  <h2 class="font-bold text-gray-900 text-sm">This Week</h2>
+                </div>
+                <div class="px-5 pt-4 pb-2" style="height: 180px">
+                  <canvas id="weekChart"></canvas>
+                </div>
+                <div class="px-5 pb-4 space-y-1.5 border-t border-gray-50 pt-3">
+                  <div class="flex justify-between text-xs">
+                    <span class="text-gray-400">Best day</span>
+                    <span id="bestDay" class="font-semibold text-gray-800"
+                      >—</span
+                    >
+                  </div>
+                  <div class="flex justify-between text-xs">
+                    <span class="text-gray-400">Weekly total</span>
+                    <span id="weekTotal" class="font-semibold text-emerald-600"
+                      >—</span
+                    >
+                  </div>
+                  <div
+                    class="h-1 bg-gray-100 rounded-full mt-2 overflow-hidden"
+                  >
+                    <div
+                      id="weekProgress"
+                      class="h-full bg-gradient-to-r from-violet-500 to-indigo-400 rounded-full"
+                      style="width: 0%"
+                    ></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- SESSIONS -->
+          <div class="page" id="page-sessions">
+            <div
+              id="sessionsContainer"
+              class="bg-white rounded-2xl border border-gray-100 overflow-hidden"
+            ></div>
+          </div>
+
+          <!-- GOALS -->
+          <div class="page" id="page-goals">
+            <div
+              class="grid grid-cols-1 md:grid-cols-2 gap-4"
+              id="goalsContainer"
+            ></div>
+          </div>
+
+          <!-- SUBJECTS -->
+          <div class="page" id="page-subjects">
+            <div
+              class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"
+              id="subjectsContainer"
+            ></div>
+          </div>
+
+          <!-- NOTES -->
+          <div class="page" id="page-notes">
+            <div
+              class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"
+              id="notesContainer"
+            ></div>
+          </div>
+
+          <!-- REPORTS -->
+          <div class="page" id="page-reports">
+            <!-- Top Stats -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
+              <div
+                class="bg-white rounded-2xl border border-gray-100 p-6 text-center card-hover transition-all"
+              >
+                <div
+                  class="w-11 h-11 rounded-xl bg-violet-50 flex items-center justify-center mx-auto mb-3"
+                >
+                  <i class="fas fa-chart-line text-violet-600 text-lg"></i>
+                </div>
+                <p
+                  id="r-total"
+                  class="text-3xl font-extrabold text-gray-900 mb-1"
+                >
+                  —
+                </p>
+                <p class="text-xs text-gray-400">Total Hours</p>
+              </div>
+              <div
+                class="bg-white rounded-2xl border border-gray-100 p-6 text-center card-hover transition-all"
+              >
+                <div
+                  class="w-11 h-11 rounded-xl bg-teal-50 flex items-center justify-center mx-auto mb-3"
+                >
+                  <i class="fas fa-clock text-teal-600 text-lg"></i>
+                </div>
+                <p
+                  id="r-avg"
+                  class="text-3xl font-extrabold text-gray-900 mb-1"
+                >
+                  —
+                </p>
+                <p class="text-xs text-gray-400">Avg Session</p>
+              </div>
+              <div
+                class="bg-white rounded-2xl border border-gray-100 p-6 text-center card-hover transition-all"
+              >
+                <div
+                  class="w-11 h-11 rounded-xl bg-orange-50 flex items-center justify-center mx-auto mb-3"
+                >
+                  <i class="fas fa-fire text-orange-500 text-lg"></i>
+                </div>
+                <p
+                  id="r-count"
+                  class="text-3xl font-extrabold text-gray-900 mb-1"
+                >
+                  —
+                </p>
+                <p class="text-xs text-gray-400">Total Sessions</p>
+              </div>
+            </div>
+            <!-- Charts -->
+            <div class="grid grid-cols-[1fr_360px] gap-4">
+              <div
+                class="bg-white rounded-2xl border border-gray-100 overflow-hidden"
+              >
+                <div class="px-5 py-4 border-b border-gray-50">
+                  <h2 class="font-bold text-gray-900 text-sm">
+                    Hours by Subject
+                  </h2>
+                </div>
+                <div class="p-5" style="height: 280px">
+                  <canvas id="subjBarChart"></canvas>
+                </div>
+              </div>
+              <div
+                class="bg-white rounded-2xl border border-gray-100 overflow-hidden"
+              >
+                <div class="px-5 py-4 border-b border-gray-50">
+                  <h2 class="font-bold text-gray-900 text-sm">Subject Split</h2>
+                </div>
+                <div class="p-5 flex flex-col items-center">
+                  <div style="width: 160px; height: 160px">
+                    <canvas id="donutChart"></canvas>
+                  </div>
+                  <div id="donutLegend" class="w-full mt-4 space-y-2"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- /content -->
+      </div>
+      <!-- /main -->
+    </div>
+    <!-- /app -->
+
+    <!-- MODAL OVERLAY -->
+    <div
+      id="modalOverlay"
+      class="modal-overlay fixed inset-0 bg-black/40 z-50 hidden items-center justify-center"
+      onclick="overlayClick(event)"
+    >
+      <!-- SESSION -->
+      <div
+        id="modal-session"
+        class="hidden bg-white rounded-2xl shadow-2xl p-7 w-full max-w-md"
+      >
+        <h2
+          id="sess-modal-title"
+          class="text-lg font-extrabold text-gray-900 mb-5"
+        >
+          Log Study Session
+        </h2>
+        <div class="grid grid-cols-2 gap-3 mb-3">
+          <div>
+            <label class="text-xs font-semibold text-gray-500 mb-1.5 block"
+              >Subject</label
+            >
+            <select
+              id="sess-subject"
+              class="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-800 transition-all"
+            ></select>
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-gray-500 mb-1.5 block"
+              >Duration (hrs)</label
+            >
+            <input
+              id="sess-dur"
+              type="number"
+              step="0.5"
+              min="0.5"
+              placeholder="e.g. 1.5"
+              class="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-800 transition-all"
+            />
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="text-xs font-semibold text-gray-500 mb-1.5 block"
+            >Date</label
+          >
+          <input
+            id="sess-date"
+            type="date"
+            class="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-800 transition-all"
+          />
+        </div>
+        <div class="mb-5">
+          <label class="text-xs font-semibold text-gray-500 mb-1.5 block"
+            >Notes (optional)</label
+          >
+          <textarea
+            id="sess-notes"
+            rows="3"
+            placeholder="What did you study?"
+            class="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-800 resize-none transition-all"
+          ></textarea>
+        </div>
+        <div class="flex gap-2.5 justify-end">
+          <button
+            onclick="closeModal()"
+            class="px-5 py-2.5 bg-gray-100 rounded-xl text-sm font-semibold text-gray-600 hover:bg-gray-200 transition-all"
+          >
+            Cancel
+          </button>
+          <button
+            id="sess-confirm"
+            onclick="saveSession()"
+            class="px-5 py-2.5 bg-gradient-to-r from-violet-600 to-indigo-500 rounded-xl text-sm font-bold text-white shadow-lg shadow-violet-200 btn-hover transition-all"
+          >
+            Log Session
+          </button>
+        </div>
+      </div>
+
+      <!-- GOAL -->
+      <div
+        id="modal-goal"
+        class="hidden bg-white rounded-2xl shadow-2xl p-7 w-full max-w-md"
+      >
+        <h2
+          id="goal-modal-title"
+          class="text-lg font-extrabold text-gray-900 mb-5"
+        >
+          Add Goal
+        </h2>
+        <div class="mb-3">
+          <label class="text-xs font-semibold text-gray-500 mb-1.5 block"
+            >Goal Title</label
+          >
+          <input
+            id="goal-title"
+            type="text"
+            placeholder="e.g. Study 20 hrs this week"
+            class="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-800 transition-all"
+          />
+        </div>
+        <div class="grid grid-cols-2 gap-3 mb-3">
+          <div>
+            <label class="text-xs font-semibold text-gray-500 mb-1.5 block"
+              >Type</label
+            >
+            <select
+              id="goal-type"
+              class="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-800 transition-all"
+            >
+              <option>Weekly Hours</option>
+              <option>Daily Streak</option>
+              <option>Monthly Hours</option>
+              <option>Grade Target</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-gray-500 mb-1.5 block"
+              >Target</label
+            >
+            <input
+              id="goal-target"
+              type="number"
+              placeholder="20"
+              class="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-800 transition-all"
+            />
+          </div>
+        </div>
+        <div class="mb-5">
+          <label class="text-xs font-semibold text-gray-500 mb-1.5 block"
+            >Deadline</label
+          >
+          <input
+            id="goal-deadline"
+            type="date"
+            class="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-800 transition-all"
+          />
+        </div>
+        <div class="flex gap-2.5 justify-end">
+          <button
+            onclick="closeModal()"
+            class="px-5 py-2.5 bg-gray-100 rounded-xl text-sm font-semibold text-gray-600 hover:bg-gray-200 transition-all"
+          >
+            Cancel
+          </button>
+          <button
+            id="goal-confirm"
+            onclick="saveGoal()"
+            class="px-5 py-2.5 bg-gradient-to-r from-violet-600 to-indigo-500 rounded-xl text-sm font-bold text-white shadow-lg shadow-violet-200 btn-hover transition-all"
+          >
+            Add Goal
+          </button>
+        </div>
+      </div>
+
+      <!-- SUBJECT -->
+      <div
+        id="modal-subject"
+        class="hidden bg-white rounded-2xl shadow-2xl p-7 w-full max-w-md"
+      >
+        <h2
+          id="subj-modal-title"
+          class="text-lg font-extrabold text-gray-900 mb-5"
+        >
+          Add Subject
+        </h2>
+        <div class="mb-3">
+          <label class="text-xs font-semibold text-gray-500 mb-1.5 block"
+            >Subject Name</label
+          >
+          <input
+            id="subj-name"
+            type="text"
+            placeholder="e.g. Physics"
+            class="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-800 transition-all"
+          />
+        </div>
+        <div class="mb-3">
+          <label class="text-xs font-semibold text-gray-500 mb-1.5 block"
+            >Category</label
+          >
+          <select
+            id="subj-cat"
+            class="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-800 transition-all"
+          >
+            <option>College · Computer Science</option>
+            <option>College · Mathematics</option>
+            <option>College · English Literature</option>
+            <option>College · Filipino Studies</option>
+            <option>College · Biology</option>
+            <option>College · Physics</option>
+            <option>College · Chemistry</option>
+            <option>College · History</option>
+          </select>
+        </div>
+        <div class="mb-5">
+          <label class="text-xs font-semibold text-gray-500 mb-1.5 block"
+            >Monthly Goal (hours)</label
+          >
+          <input
+            id="subj-goal"
+            type="number"
+            value="15"
+            class="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-800 transition-all"
+          />
+        </div>
+        <div class="flex gap-2.5 justify-end">
+          <button
+            onclick="closeModal()"
+            class="px-5 py-2.5 bg-gray-100 rounded-xl text-sm font-semibold text-gray-600 hover:bg-gray-200 transition-all"
+          >
+            Cancel
+          </button>
+          <button
+            id="subj-confirm"
+            onclick="saveSubject()"
+            class="px-5 py-2.5 bg-gradient-to-r from-violet-600 to-indigo-500 rounded-xl text-sm font-bold text-white shadow-lg shadow-violet-200 btn-hover transition-all"
+          >
+            Add Subject
+          </button>
+        </div>
+      </div>
+
+      <!-- NOTE -->
+      <div
+        id="modal-note"
+        class="hidden bg-white rounded-2xl shadow-2xl p-7 w-full max-w-md"
+      >
+        <h2
+          id="note-modal-title"
+          class="text-lg font-extrabold text-gray-900 mb-5"
+        >
+          New Note
+        </h2>
+        <div class="grid grid-cols-2 gap-3 mb-3">
+          <div>
+            <label class="text-xs font-semibold text-gray-500 mb-1.5 block"
+              >Subject</label
+            >
+            <select
+              id="note-subject"
+              class="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-800 transition-all"
+            ></select>
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-gray-500 mb-1.5 block"
+              >Priority</label
+            >
+            <select
+              id="note-priority"
+              class="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-800 transition-all"
+            >
+              <option value="high">High</option>
+              <option value="medium" selected>Medium</option>
+              <option value="low">Low</option>
+            </select>
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="text-xs font-semibold text-gray-500 mb-1.5 block"
+            >Title</label
+          >
+          <input
+            id="note-title"
+            type="text"
+            placeholder="Note title"
+            class="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-800 transition-all"
+          />
+        </div>
+        <div class="mb-5">
+          <label class="text-xs font-semibold text-gray-500 mb-1.5 block"
+            >Content</label
+          >
+          <textarea
+            id="note-content"
+            rows="4"
+            placeholder="Write your study notes here..."
+            class="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-800 resize-none transition-all"
+          ></textarea>
+        </div>
+        <div class="flex gap-2.5 justify-end">
+          <button
+            onclick="closeModal()"
+            class="px-5 py-2.5 bg-gray-100 rounded-xl text-sm font-semibold text-gray-600 hover:bg-gray-200 transition-all"
+          >
+            Cancel
+          </button>
+          <button
+            id="note-confirm"
+            onclick="saveNote()"
+            class="px-5 py-2.5 bg-gradient-to-r from-violet-600 to-indigo-500 rounded-xl text-sm font-bold text-white shadow-lg shadow-violet-200 btn-hover transition-all"
+          >
+            Save Note
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TOAST -->
+    <div
+      id="toast"
+      class="toast fixed bottom-6 right-6 bg-gray-900 text-white px-5 py-3 rounded-xl text-sm font-semibold z-[9999] opacity-0 translate-y-2 pointer-events-none flex items-center gap-2 shadow-xl"
+    ></div>
+
+    <script>
+      /* ═══════ DATA ═══════════════════════════════════════════════ */
+      const SK = {
+        sessions: "st2_sessions",
+        goals: "st2_goals",
+        subjects: "st2_subjects",
+        notes: "st2_notes",
+        user: "st2_user",
+        auth: "st2_auth",
+      };
+      const ld = (k, d) => {
+        try {
+          const v = localStorage.getItem(k);
+          return v ? JSON.parse(v) : d;
+        } catch {
+          return d;
+        }
+      };
+      const sv = (k, v) => localStorage.setItem(k, JSON.stringify(v));
+
+      let currentUser = { name: "User", email: "user@example.com", id: null };
+      let sessions = [];
+      let goals = [];
+      let subjects = [];
+      let notes = [];
+
+      async function fetchUserData() {
+        try {
+          const user = ld(SK.user, null);
+          if (!user) {
+            toast("⚠️ User data missing. Logging out...");
+            doLogout();
+            return false;
+          }
+          currentUser = user;
+          return true;
+        } catch (err) {
+          console.error("Failed to load user:", err);
+          toast("⚠️ Error loading user data");
+          return false;
+        }
+      }
+
+      async function fetchSessions() {
+        try {
+          const response = await fetch(
+            `/api/sessions?user_id=${currentUser.id}`,
+          );
+          if (response.ok) {
+            const data = await response.json();
+            sessions = (data.sessions || []).map((s) => ({
+              ...s,
+              date: s.session_date,
+              subject: s.subject_name || "Unknown",
+            }));
+          }
+        } catch (err) {
+          console.error("Failed to fetch sessions:", err);
+          // Fallback to localStorage
+          const storedSessions = ld("st2_sessions", []);
+          sessions = storedSessions;
+        }
+      }
+
+      async function fetchSubjects() {
+        try {
+          const response = await fetch(
+            `/api/subjects?user_id=${currentUser.id}`,
+          );
+          if (response.ok) {
+            const data = await response.json();
+            subjects = (data.subjects || []).map((s) => ({
+              ...s,
+              cat: s.category || "General",
+              goal: s.monthly_goal,
+              studied: s.total_time || 0,
+              sessions: 0,
+            }));
+          }
+        } catch (err) {
+          console.error("Failed to fetch subjects:", err);
+          // Fallback to localStorage
+          const storedSubjects = ld("st2_subjects", []);
+          subjects = storedSubjects.map((s) => ({
+            ...s,
+            cat: s.category || "General",
+            goal: s.monthly_goal,
+            studied: s.total_time || 0,
+            sessions: 0,
+          }));
+        }
+      }
+
+      async function fetchGoals() {
+        try {
+          const response = await fetch(`/api/goals?user_id=${currentUser.id}`);
+          if (response.ok) {
+            const data = await response.json();
+            goals = (data.goals || []).map((g) => ({
+              ...g,
+              title: g.type || "Goal",
+            }));
+          }
+        } catch (err) {
+          console.error("Failed to fetch goals:", err);
+          // Fallback to localStorage
+          const storedGoals = ld("st2_goals", []);
+          goals = storedGoals.map((g) => ({
+            ...g,
+            title: g.type || "Goal",
+          }));
+        }
+      }
+
+      async function fetchNotes() {
+        try {
+          const response = await fetch(`/api/notes?user_id=${currentUser.id}`);
+          if (response.ok) {
+            const data = await response.json();
+            notes = (data.notes || []).map((n) => ({
+              ...n,
+              subject: n.subject_name || "Unknown",
+            }));
+          }
+        } catch (err) {
+          console.error("Failed to fetch notes:", err);
+          // Fallback to localStorage
+          const storedNotes = ld("st2_notes", []);
+          notes = storedNotes.map((n) => ({
+            ...n,
+            subject: n.subject_name || "Unknown",
+          }));
+        }
+      }
+
+      async function loadAllData() {
+        const userOk = await fetchUserData();
+        if (!userOk) return;
+
+        await Promise.all([
+          fetchSessions(),
+          fetchSubjects(),
+          fetchGoals(),
+          fetchNotes(),
+        ]);
+      }
+
+      const DEF_SESSIONS = [];
+      const DEF_SUBJECTS = [];
+      const DEF_GOALS = [];
+      const DEF_NOTES = [];
+
+      const COLORS = [
+        "#6c5ce7",
+        "#00b894",
+        "#0984e3",
+        "#e05575",
+        "#e67e22",
+        "#a29bfe",
+        "#55efc4",
+      ];
+      let editId = { sess: null, goal: null, subj: null, note: null };
+      let weekChartInst = null,
+        subjBarInst = null,
+        donutInst = null;
+
+      /* ═══════ NAV ════════════════════════════════════════════════ */
+      const PAGE_META = {
+        dashboard: {
+          title: "Welcome back!",
+          sub: "Here's your study overview",
+          action: "",
+        },
+        sessions: {
+          title: "Study Sessions",
+          sub: "Log and track your study sessions",
+          action:
+            '<button onclick="openModal(\'session\')" class="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-violet-600 to-indigo-500 rounded-xl text-sm font-bold text-white shadow-lg shadow-violet-200 btn-hover transition-all"><i class="fas fa-plus text-xs"></i> Log Session</button>',
+        },
+        goals: {
+          title: "Goals",
+          sub: "Set and track your study goals",
+          action:
+            '<button onclick="openModal(\'goal\')" class="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-violet-600 to-indigo-500 rounded-xl text-sm font-bold text-white shadow-lg shadow-violet-200 btn-hover transition-all"><i class="fas fa-plus text-xs"></i> Add Goal</button>',
+        },
+        subjects: {
+          title: "Subjects",
+          sub: "Manage your study subjects",
+          action:
+            '<button onclick="openModal(\'subject\')" class="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-violet-600 to-indigo-500 rounded-xl text-sm font-bold text-white shadow-lg shadow-violet-200 btn-hover transition-all"><i class="fas fa-plus text-xs"></i> Add Subject</button>',
+        },
+        notes: {
+          title: "Study Notes",
+          sub: "Your study notes and references",
+          action:
+            '<button onclick="openModal(\'note\')" class="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-violet-600 to-indigo-500 rounded-xl text-sm font-bold text-white shadow-lg shadow-violet-200 btn-hover transition-all"><i class="fas fa-plus text-xs"></i> New Note</button>',
+        },
+        reports: {
+          title: "Reports",
+          sub: "Analytics and insights",
+          action:
+            '<button onclick="exportCSV()" class="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-violet-600 to-indigo-500 rounded-xl text-sm font-bold text-white shadow-lg shadow-violet-200 btn-hover transition-all"><i class="fas fa-download text-xs"></i> Export CSV</button>',
+        },
+      };
+
+      function nav(page, btn) {
+        document
+          .querySelectorAll(".page")
+          .forEach((p) => p.classList.remove("active"));
+        document.getElementById("page-" + page)?.classList.add("active");
+        document
+          .querySelectorAll(".nav-btn")
+          .forEach((b) => b.classList.remove("nav-active"));
+        if (btn) btn.classList.add("nav-active");
+        else {
+          const found = [...document.querySelectorAll(".nav-btn")].find((b) =>
+            b.getAttribute("onclick")?.includes(`'${page}'`),
+          );
+          if (found) found.classList.add("nav-active");
+        }
+        const m = PAGE_META[page] || {};
+        document.getElementById("pageTitle").textContent = m.title || page;
+        document.getElementById("pageSub").textContent = m.sub || "";
+        document.getElementById("topbarActions").innerHTML = m.action || "";
+        if (page === "dashboard") renderDashboard();
+        if (page === "sessions") renderSessions();
+        if (page === "goals") renderGoals();
+        if (page === "subjects") renderSubjects();
+        if (page === "notes") renderNotes();
+        if (page === "reports") renderReports();
+        toggleSidebar(false);
+      }
+
+      /* ═══════ DASHBOARD ════════════════════════════════════════ */
+      function renderDashboard() {
+        const total = sessions.reduce((s, x) => s + x.duration, 0);
+        const today = new Date().toISOString().slice(0, 10);
+        const todayH = sessions
+          .filter((s) => s.date === today)
+          .reduce((s, x) => s + x.duration, 0);
+        const wg = goals.find((g) => g.type === "Weekly Hours");
+        const streak = calcStreak();
+        document.getElementById("d-total").textContent = total + "h";
+        document.getElementById("d-today").textContent = todayH + "h";
+        document.getElementById("d-goal").textContent = wg
+          ? wg.current + "/" + wg.target + "h"
+          : "—";
+        document.getElementById("d-streak").textContent = streak;
+
+        // Recent Activity
+        const ra = document.getElementById("recentActivity");
+        const sorted = [...sessions]
+          .sort((a, b) => b.date.localeCompare(a.date))
+          .slice(0, 5);
+        ra.innerHTML = sorted
+          .map(
+            (s) => `
+    <div class="flex items-start gap-3.5 px-5 py-3.5 border-b border-gray-50 last:border-0 hover:bg-gray-50/60 transition-colors">
+      <div class="w-9 h-9 rounded-xl bg-violet-50 flex items-center justify-center flex-shrink-0">
+        <i class="fas fa-book text-violet-500 text-sm"></i>
+      </div>
+      <div class="flex-1 min-w-0">
+        <p class="text-sm font-semibold text-gray-900">${s.subject}</p>
+        <p class="text-xs text-gray-400 mt-0.5">${s.duration}h · ${fmtDate(s.date)}</p>
+        <p class="text-xs text-gray-500 mt-1 leading-relaxed truncate">${s.notes || ""}</p>
+      </div>
+    </div>`,
+          )
+          .join("");
+
+        // Week Chart
+        buildWeekChart();
+      }
+
+      function buildWeekChart() {
+        const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+        const now = new Date();
+        const todayIdx = (now.getDay() + 6) % 7;
+        const weekH = Array(7).fill(0);
+        sessions.forEach((s) => {
+          const d = new Date(s.date + "T00:00");
+          const diff = Math.floor((now - d) / 864e5);
+          if (diff >= 0 && diff < 7) {
+            weekH[(d.getDay() + 6) % 7] += s.duration;
+          }
+        });
+        const labels = days.map((d, i) => (i === todayIdx ? "Today" : d));
+        const bgColors = weekH.map((_, i) =>
+          i === todayIdx ? "#6c5ce7" : "#e8e6fe",
+        );
+
+        if (weekChartInst) {
+          weekChartInst.destroy();
+          weekChartInst = null;
+        }
+        const ctx = document.getElementById("weekChart").getContext("2d");
+        weekChartInst = new Chart(ctx, {
+          type: "bar",
+          data: {
+            labels,
+            datasets: [
+              {
+                data: weekH,
+                backgroundColor: bgColors,
+                borderRadius: 6,
+                borderSkipped: false,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false },
+              tooltip: { callbacks: { label: (c) => c.parsed.y + "h" } },
+            },
+            scales: {
+              x: {
+                grid: { display: false },
+                ticks: {
+                  font: { size: 10, family: "Inter" },
+                  color: "#9ca3af",
+                },
+              },
+              y: { display: false, beginAtZero: true },
+            },
+            animation: { duration: 600 },
+          },
+        });
+
+        const maxI = weekH.indexOf(Math.max(...weekH));
+        const totalW = weekH.reduce((a, b) => a + b, 0);
+        const wg = goals.find((g) => g.type === "Weekly Hours");
+        const wgt = wg ? wg.target : 20;
+        const bestHours = Math.max(...weekH);
+        document.getElementById("bestDay").textContent = bestHours
+          ? days[maxI] + " · " + bestHours + "h"
+          : "—";
+        document.getElementById("weekTotal").textContent =
+          totalW + " / " + wgt + " hrs";
+        document.getElementById("weekProgress").style.width =
+          Math.min((totalW / wgt) * 100, 100) + "%";
+      }
+
+      /* ═══════ SESSIONS ══════════════════════════════════════════ */
+      function renderSessions() {
+        const sorted = [...sessions].sort((a, b) =>
+          b.date.localeCompare(a.date),
+        );
+        const c = document.getElementById("sessionsContainer");
+        if (!sorted.length) {
+          c.innerHTML =
+            '<div class="p-10 text-center text-gray-400 text-sm">No sessions yet. Log your first study session!</div>';
+          return;
+        }
+        c.innerHTML = sorted
+          .map(
+            (s) => `
+    <div class="flex items-center gap-4 px-5 py-4 border-b border-gray-50 last:border-0 hover:bg-gray-50/60 transition-colors group">
+      <div class="w-10 h-10 rounded-xl bg-violet-50 flex items-center justify-center flex-shrink-0">
+        <i class="fas fa-clock text-violet-500 text-sm"></i>
+      </div>
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center gap-2">
+          <span class="text-sm font-semibold text-gray-900">${s.subject}</span>
+          <span class="bg-violet-50 text-violet-600 text-xs font-bold px-2 py-0.5 rounded-full">${s.duration}h</span>
+        </div>
+        <p class="text-xs text-gray-400 mt-0.5">${fmtDate(s.date)}${s.notes ? " · " + s.notes : ""}</p>
+      </div>
+      <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-all">
+        <button onclick="editSession(${s.id})" class="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 text-xs flex items-center justify-center"><i class="fas fa-pen"></i></button>
+        <button onclick="deleteSession(${s.id})" class="w-7 h-7 rounded-lg bg-red-50 text-red-400 hover:bg-red-100 text-xs flex items-center justify-center"><i class="fas fa-trash"></i></button>
+      </div>
+    </div>`,
+          )
+          .join("");
+      }
+
+      async function deleteSession(id) {
+        if (!confirm("Delete this session?")) return;
+        try {
+          const response = await fetch("/api/sessions", {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id }),
+          });
+          if (response.ok) {
+            sessions = sessions.filter((s) => s.id !== id);
+            renderSessions();
+            renderDashboard();
+            toast("Session deleted");
+          } else {
+            toast("Failed to delete session");
+          }
+        } catch (err) {
+          console.error(err);
+          toast("Error deleting session");
+        }
+      }
+
+      function editSession(id) {
+        const s = sessions.find((x) => x.id === id);
+        if (!s) return;
+        editId.sess = id;
+        populateSubjectDropdown("sess-subject", s.subject);
+        document.getElementById("sess-dur").value = s.duration;
+        document.getElementById("sess-date").value = s.date;
+        document.getElementById("sess-notes").value = s.notes || "";
+        document.getElementById("sess-modal-title").textContent =
+          "Edit Session";
+        document.getElementById("sess-confirm").textContent = "Update Session";
+        openModalEl("session");
+      }
+
+      /* ═══════ GOALS ════════════════════════════════════════════ */
+      const TYPE_CHIP = {
+        "Weekly Hours": "bg-violet-50 text-violet-600",
+        "Daily Streak": "bg-orange-50 text-orange-500",
+        "Monthly Hours": "bg-teal-50 text-teal-600",
+        "Grade Target": "bg-blue-50 text-blue-600",
+      };
+      function renderGoals() {
+        const c = document.getElementById("goalsContainer");
+        if (!goals.length) {
+          c.innerHTML =
+            '<div class="col-span-2 p-10 text-center text-gray-400 text-sm bg-white rounded-2xl border border-gray-100">No goals yet. Add your first goal!</div>';
+          return;
+        }
+        c.innerHTML = goals
+          .map((g) => {
+            const pct = Math.min(Math.round((g.current / g.target) * 100), 100);
+            const chip = TYPE_CHIP[g.type] || "bg-violet-50 text-violet-600";
+            return `<div class="bg-white rounded-2xl border border-gray-100 p-5 card-hover transition-all">
+      <div class="flex items-start justify-between mb-2">
+        <div>
+          <p class="text-sm font-bold text-gray-900">${g.title}</p>
+          <span class="text-[11px] font-semibold px-2 py-0.5 rounded-full ${chip} mt-1 inline-block">${g.type}</span>
+        </div>
+        <button onclick="deleteGoal(${g.id})" class="w-7 h-7 rounded-lg bg-red-50 text-red-400 hover:bg-red-100 text-xs flex items-center justify-center transition-all">
+          <i class="fas fa-trash"></i>
+        </button>
+      </div>
+      <div class="h-1.5 bg-gray-100 rounded-full mt-3 mb-2 overflow-hidden">
+        <div class="h-full bg-gradient-to-r from-violet-500 to-indigo-400 rounded-full transition-all" style="width:${pct}%"></div>
+      </div>
+      <div class="flex justify-between text-xs text-gray-400">
+        <span>${g.current} / ${g.target}</span>
+        <span>Due ${g.deadline}</span>
+      </div>
+    </div>`;
+          })
+          .join("");
+      }
+
+      async function deleteGoal(id) {
+        if (!confirm("Delete this goal?")) return;
+        try {
+          const response = await fetch("/api/goals", {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id }),
+          });
+          if (response.ok) {
+            goals = goals.filter((g) => g.id !== id);
+            renderGoals();
+            renderDashboard();
+            toast("Goal removed");
+          } else {
+            toast("Failed to delete goal");
+          }
+        } catch (err) {
+          console.error(err);
+          toast("Error deleting goal");
+        }
+      }
+
+      /* ═══════ SUBJECTS ══════════════════════════════════════════ */
+      function renderSubjects() {
+        const c = document.getElementById("subjectsContainer");
+        if (!subjects.length) {
+          c.innerHTML =
+            '<div class="col-span-3 p-10 text-center text-gray-400 text-sm bg-white rounded-2xl border border-gray-100">No subjects yet.</div>';
+          return;
+        }
+        c.innerHTML = subjects
+          .map(
+            (s) => `
+    <div class="bg-white rounded-2xl border border-gray-100 p-5 relative card-hover transition-all">
+      <button onclick="deleteSubject(${s.id})" class="absolute top-4 right-4 w-7 h-7 rounded-lg bg-red-50 text-red-400 hover:bg-red-100 text-xs flex items-center justify-center transition-all opacity-0 group-hover:opacity-100" style="opacity:1">
+        <i class="fas fa-trash"></i>
+      </button>
+      <div class="w-10 h-10 rounded-xl bg-violet-50 flex items-center justify-center mb-3">
+        <i class="fas fa-book-open text-violet-500 text-sm"></i>
+      </div>
+      <p class="text-sm font-bold text-gray-900">${s.name}</p>
+      <p class="text-xs text-gray-400 mb-3">${s.cat}</p>
+      <div class="flex gap-4">
+        <div><span class="text-sm font-bold text-gray-900">${s.studied || 0}h</span><span class="text-xs text-gray-400 ml-1">studied</span></div>
+        <div><span class="text-sm font-bold text-gray-900">${s.goal}h/mo</span><span class="text-xs text-gray-400 ml-1">goal</span></div>
+      </div>
+    </div>`,
+          )
+          .join("");
+      }
+
+      async function deleteSubject(id) {
+        if (!confirm("Delete this subject?")) return;
+        try {
+          const response = await fetch("/api/subjects", {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id }),
+          });
+          if (response.ok) {
+            subjects = subjects.filter((s) => s.id !== id);
+            renderSubjects();
+            toast("Subject removed");
+          } else {
+            toast("Failed to delete subject");
+          }
+        } catch (err) {
+          console.error(err);
+          toast("Error deleting subject");
+        }
+      }
+
+      /* ═══════ NOTES ════════════════════════════════════════════ */
+      const P_STYLE = {
+        high: "bg-red-50 text-red-500",
+        medium: "bg-orange-50 text-orange-500",
+        low: "bg-green-50 text-green-600",
+      };
+      function renderNotes() {
+        const c = document.getElementById("notesContainer");
+        if (!notes.length) {
+          c.innerHTML =
+            '<div class="col-span-3 p-10 text-center text-gray-400 text-sm bg-white rounded-2xl border border-gray-100">No notes yet. Create your first note!</div>';
+          return;
+        }
+        c.innerHTML = notes
+          .map(
+            (n) => `
+    <div class="bg-white rounded-2xl border border-gray-100 p-5 relative card-hover transition-all">
+      <button onclick="deleteNote(${n.id})" class="absolute top-4 right-4 w-7 h-7 rounded-lg bg-red-50 text-red-400 hover:bg-red-100 text-xs flex items-center justify-center transition-all" style="opacity:1">
+        <i class="fas fa-trash"></i>
+      </button>
+      <span class="text-[11px] font-bold px-2.5 py-1 rounded-full ${P_STYLE[n.priority] || P_STYLE.medium} inline-block mb-3">${n.priority}</span>
+      <p class="text-sm font-bold text-gray-900 mb-1 pr-8">${n.title}</p>
+      <p class="text-xs text-violet-500 font-medium mb-2">${n.subject}</p>
+      <p class="text-xs text-gray-500 leading-relaxed">${n.content}</p>
+    </div>`,
+          )
+          .join("");
+      }
+
+      async function deleteNote(id) {
+        if (!confirm("Delete this note?")) return;
+        try {
+          const response = await fetch("/api/notes", {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id }),
+          });
+          if (response.ok) {
+            notes = notes.filter((n) => n.id !== id);
+            renderNotes();
+            toast("Note deleted");
+          } else {
+            toast("Failed to delete note");
+          }
+        } catch (err) {
+          console.error(err);
+          toast("Error deleting note");
+        }
+      }
+
+      /* ═══════ REPORTS ════════════════════════════════════════ */
+      function renderReports() {
+        const total = sessions.reduce((s, x) => s + x.duration, 0);
+        const avg = sessions.length ? +(total / sessions.length).toFixed(1) : 0;
+        document.getElementById("r-total").textContent = total + "h";
+        document.getElementById("r-avg").textContent = avg + "h";
+        document.getElementById("r-count").textContent = sessions.length;
+
+        // Hours by subject bar chart
+        const bySubj = {};
+        sessions.forEach((s) => {
+          bySubj[s.subject] = (bySubj[s.subject] || 0) + s.duration;
+        });
+        const sortedSubj = Object.entries(bySubj).sort((a, b) => b[1] - a[1]);
+        const hasSubjectData = sortedSubj.length > 0;
+        const barLabels = hasSubjectData
+          ? sortedSubj.map((x) => x[0])
+          : ["No data"];
+        const barValues = hasSubjectData ? sortedSubj.map((x) => x[1]) : [0];
+        const legendContent = hasSubjectData
+          ? sortedSubj
+              .map(
+                ([name, h], i) => `
+    <div class="flex items-center gap-2 text-xs">
+      <div class="w-2.5 h-2.5 rounded-full flex-shrink-0" style="background:${COLORS[i % COLORS.length]}"></div>
+      <span class="flex-1 text-gray-500">${name}</span>
+      <span class="font-bold text-gray-900">${h}h</span>
+    </div>`,
+              )
+              .join("")
+          : '<div class="text-xs text-gray-400">Add sessions to see your subject breakdown.</div>';
+
+        if (subjBarInst) {
+          subjBarInst.destroy();
+          subjBarInst = null;
+        }
+        const bCtx = document.getElementById("subjBarChart").getContext("2d");
+        subjBarInst = new Chart(bCtx, {
+          type: "bar",
+          data: {
+            labels: barLabels,
+            datasets: [
+              {
+                data: barValues,
+                backgroundColor: barLabels.map(
+                  (_, i) => COLORS[i % COLORS.length],
+                ),
+                borderRadius: 6,
+                borderSkipped: false,
+              },
+            ],
+          },
+          options: {
+            indexAxis: "y",
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false },
+              tooltip: { callbacks: { label: (c) => c.parsed.x + "h" } },
+            },
+            scales: {
+              x: {
+                grid: { color: "#f5f6fa" },
+                ticks: {
+                  font: { size: 11, family: "Inter" },
+                  color: "#9ca3af",
+                },
+              },
+              y: {
+                grid: { display: false },
+                ticks: {
+                  font: { size: 12, family: "Inter", weight: "600" },
+                  color: "#374151",
+                },
+              },
+            },
+            animation: { duration: 700 },
+          },
+        });
+
+        // Donut chart
+        if (donutInst) {
+          donutInst.destroy();
+          donutInst = null;
+        }
+        const dCtx = document.getElementById("donutChart").getContext("2d");
+        donutInst = new Chart(dCtx, {
+          type: "doughnut",
+          data: {
+            labels: barLabels,
+            datasets: [
+              {
+                data: barValues,
+                backgroundColor: barLabels.map(
+                  (_, i) => COLORS[i % COLORS.length],
+                ),
+                borderWidth: 0,
+                hoverOffset: 4,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: "70%",
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                callbacks: { label: (c) => c.label + ": " + c.parsed + "h" },
+              },
+            },
+            animation: { duration: 700 },
+          },
+        });
+
+        // Legend
+        document.getElementById("donutLegend").innerHTML = legendContent;
+      }
+
+      /* ═══════ MODALS ════════════════════════════════════════════ */
+      function openModal(type) {
+        editId[
+          { session: "sess", goal: "goal", subject: "subj", note: "note" }[type]
+        ] = null;
+        if (type === "session") {
+          populateSubjectDropdown("sess-subject", "");
+          document.getElementById("sess-dur").value = "";
+          document.getElementById("sess-date").value = new Date()
+            .toISOString()
+            .slice(0, 10);
+          document.getElementById("sess-notes").value = "";
+          document.getElementById("sess-modal-title").textContent =
+            "Log Study Session";
+          document.getElementById("sess-confirm").textContent = "Log Session";
+        }
+        if (type === "note") {
+          populateSubjectDropdown("note-subject", "");
+          document.getElementById("note-title").value = "";
+          document.getElementById("note-content").value = "";
+          document.getElementById("note-priority").value = "medium";
+          document.getElementById("note-modal-title").textContent = "New Note";
+          document.getElementById("note-confirm").textContent = "Save Note";
+        }
+        if (type === "goal") {
+          document.getElementById("goal-title").value = "";
+          document.getElementById("goal-target").value = "";
+          document.getElementById("goal-deadline").value = "";
+          document.getElementById("goal-modal-title").textContent = "Add Goal";
+          document.getElementById("goal-confirm").textContent = "Add Goal";
+        }
+        if (type === "subject") {
+          document.getElementById("subj-name").value = "";
+          document.getElementById("subj-goal").value = "15";
+          document.getElementById("subj-modal-title").textContent =
+            "Add Subject";
+          document.getElementById("subj-confirm").textContent = "Add Subject";
+        }
+        openModalEl(type);
+      }
+
+      function openModalEl(type) {
+        const o = document.getElementById("modalOverlay");
+        document
+          .querySelectorAll("#modalOverlay > div")
+          .forEach((d) => d.classList.add("hidden"));
+        document.getElementById("modal-" + type)?.classList.remove("hidden");
+        o.classList.remove("hidden");
+        o.classList.add("flex");
+      }
+
+      function closeModal() {
+        const o = document.getElementById("modalOverlay");
+        o.classList.add("hidden");
+        o.classList.remove("flex");
+        document
+          .querySelectorAll("#modalOverlay > div")
+          .forEach((d) => d.classList.add("hidden"));
+      }
+
+      function overlayClick(e) {
+        if (e.target === document.getElementById("modalOverlay")) closeModal();
+      }
+
+      function populateSubjectDropdown(id, selected) {
+        const el = document.getElementById(id);
+        el.innerHTML = subjects
+          .map(
+            (s) =>
+              `<option value="${s.name}" ${s.name === selected ? "selected" : ""}>${s.name}</option>`,
+          )
+          .join("");
+      }
+
+      /* ═══════ SAVE ACTIONS ══════════════════════════════════════ */
+      async function saveSession() {
+        const subjName = document.getElementById("sess-subject").value;
+        const dur = parseFloat(document.getElementById("sess-dur").value);
+        const date = document.getElementById("sess-date").value;
+        const notes_ = document.getElementById("sess-notes").value.trim();
+
+        if (!subjName || !dur || !date) {
+          toast("Please fill all required fields");
+          return;
+        }
+
+        const subj = subjects.find((s) => s.name === subjName);
+        if (!subj) {
+          toast("Invalid subject selected");
+          return;
+        }
+
+        try {
+          if (editId.sess) {
+            // Update existing session
+            const response = await fetch("/api/sessions", {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                id: editId.sess,
+                subject_id: subj.id,
+                duration: dur,
+                notes: notes_,
+                session_date: date,
+              }),
+            });
+            if (response.ok) {
+              const updated = sessions.find((s) => s.id === editId.sess);
+              if (updated) {
+                updated.duration = dur;
+                updated.notes = notes_;
+                updated.session_date = date;
+              }
+              editId.sess = null;
+              toast("Session updated ✅");
+            } else {
+              toast("Failed to update session");
+              return;
+            }
+          } else {
+            // Create new session
+            const response = await fetch("/api/sessions", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                user_id: currentUser.id,
+                subject_id: subj.id,
+                duration: dur,
+                notes: notes_,
+                session_date: date,
+              }),
+            });
+            if (response.ok) {
+              const result = await response.json();
+              // Normalize API response to match expected format
+              const normalized = {
+                ...result,
+                date: result.session_date,
+                subject: result.subject_name || subjName,
+              };
+              sessions.unshift(normalized);
+              toast("Session logged ✅");
+            } else {
+              toast("Failed to save session");
+              return;
+            }
+          }
+          closeModal();
+          renderSessions();
+          renderDashboard();
+        } catch (err) {
+          console.error(err);
+          toast("Error saving session");
+        }
+      }
+
+      async function saveGoal() {
+        const type = document.getElementById("goal-type").value;
+        const target = parseFloat(document.getElementById("goal-target").value);
+        const deadline = document.getElementById("goal-deadline").value;
+
+        if (!type || !target || !deadline) {
+          toast("Please fill all fields");
+          return;
+        }
+
+        try {
+          const response = await fetch("/api/goals", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              user_id: currentUser.id,
+              subject_id: null,
+              type,
+              target,
+              current: 0,
+              deadline,
+            }),
+          });
+
+          if (response.ok) {
+            const result = await response.json();
+            // Ensure title field exists for rendering
+            const goal = {
+              ...result,
+              title: result.title || result.type,
+            };
+            goals.push(goal);
+            closeModal();
+            renderGoals();
+            renderDashboard();
+            toast("Goal added ✅");
+          } else {
+            toast("Failed to add goal");
+          }
+        } catch (err) {
+          console.error(err);
+          toast("Error adding goal");
+        }
+      }
+
+      async function saveSubject() {
+        const name = document.getElementById("subj-name").value.trim();
+        const category = document.getElementById("subj-cat").value;
+        const monthly_goal =
+          parseInt(document.getElementById("subj-goal").value) || 15;
+
+        if (!name) {
+          toast("Please enter a subject name");
+          return;
+        }
+
+        try {
+          const response = await fetch("/api/subjects", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              user_id: currentUser.id,
+              name,
+              category,
+              icon: "📚",
+              monthly_goal,
+            }),
+          });
+
+          if (response.ok) {
+            const result = await response.json();
+            const subject = {
+              ...result,
+              cat: result.category || "General",
+              goal: result.monthly_goal,
+              studied: result.total_time || 0,
+              sessions: 0,
+            };
+            subjects.push(subject);
+            closeModal();
+            renderSubjects();
+            toast("Subject added ✅");
+          } else {
+            toast("Failed to add subject");
+          }
+        } catch (err) {
+          console.error(err);
+          toast("Error adding subject");
+        }
+      }
+
+      async function saveNote() {
+        const subjName = document.getElementById("note-subject").value;
+        const priority = document.getElementById("note-priority").value;
+        const title = document.getElementById("note-title").value.trim();
+        const content = document.getElementById("note-content").value.trim();
+
+        if (!title || !content || !subjName) {
+          toast("Please fill all fields");
+          return;
+        }
+
+        const subj = subjects.find((s) => s.name === subjName);
+        if (!subj) {
+          toast("Invalid subject selected");
+          return;
+        }
+
+        try {
+          if (editId.note) {
+            // Update existing note
+            const response = await fetch("/api/notes", {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                id: editId.note,
+                title,
+                content,
+                priority,
+                is_archived: false,
+              }),
+            });
+            if (response.ok) {
+              const updated = notes.find((n) => n.id === editId.note);
+              if (updated) {
+                updated.title = title;
+                updated.content = content;
+                updated.priority = priority;
+              }
+              editId.note = null;
+              toast("Note updated ✅");
+            } else {
+              toast("Failed to update note");
+              return;
+            }
+          } else {
+            // Create new note
+            const response = await fetch("/api/notes", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                user_id: currentUser.id,
+                subject_id: subj.id,
+                title,
+                content,
+                priority,
+              }),
+            });
+            if (response.ok) {
+              const result = await response.json();
+              const note = {
+                ...result,
+                subject: result.subject_name || subjName,
+              };
+              notes.unshift(note);
+              toast("Note saved ✅");
+            } else {
+              toast("Failed to save note");
+              return;
+            }
+          }
+          closeModal();
+          renderNotes();
+        } catch (err) {
+          console.error(err);
+          toast("Error saving note");
+        }
+      }
+
+      /* ═══════ UTILS ═════════════════════════════════════════════ */
+      function fmtDate(d) {
+        return new Date(d + "T00:00").toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        });
+      }
+      function calcStreak() {
+        const days = new Set(sessions.map((s) => s.date));
+        let streak = 0,
+          d = new Date();
+        while (days.has(d.toISOString().slice(0, 10))) {
+          streak++;
+          d.setDate(d.getDate() - 1);
+        }
+        return streak;
+      }
+
+      function exportCSV() {
+        const total = sessions.reduce((s, x) => s + x.duration, 0);
+        let csv = "Study Tracker Export\n";
+        csv += `User,${currentUser.name}\nDate,${new Date().toLocaleDateString()}\nTotal Hours,${total}\n\n`;
+        csv += "SESSIONS\nDate,Subject,Duration,Notes\n";
+        sessions.forEach((s) => {
+          csv += `${s.date},"${s.subject}",${s.duration},"${(s.notes || "").replace(/"/g, '""')}"\n`;
+        });
+        csv += "\nGOALS\nTitle,Type,Target,Current,Deadline\n";
+        goals.forEach((g) => {
+          csv += `"${g.title}","${g.type}",${g.target},${g.current},${g.deadline}\n`;
+        });
+        const blob = new Blob([csv], { type: "text/csv" });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = `StudyTracker-${new Date().toISOString().slice(0, 10)}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        toast("CSV downloaded 📥");
+      }
+
+      let toastTimer;
+      function toggleSidebar(open) {
+        const sidebar = document.getElementById("sidebar");
+        const backdrop = document.getElementById("sidebarBackdrop");
+        if (open) {
+          sidebar.classList.add("open");
+          backdrop.classList.remove(
+            "hidden",
+            "opacity-0",
+            "pointer-events-none",
+          );
+          backdrop.classList.add("opacity-100");
+        } else {
+          sidebar.classList.remove("open");
+          backdrop.classList.remove("opacity-100");
+          backdrop.classList.add("opacity-0", "pointer-events-none", "hidden");
+        }
+      }
+
+      function toast(msg) {
+        const t = document.getElementById("toast");
+        t.textContent = msg;
+        t.classList.remove("opacity-0", "translate-y-2");
+        t.classList.add("opacity-100", "translate-y-0");
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => {
+          t.classList.add("opacity-0", "translate-y-2");
+          t.classList.remove("opacity-100", "translate-y-0");
+        }, 3000);
+      }
+
+      function doLogout() {
+        const btn = document.getElementById("logoutBtn");
+        if (btn) btn.style.backgroundColor = "red";
+        localStorage.removeItem(SK.auth);
+        toast("Logging out…");
+        setTimeout(() => (window.location.href = "login.html"), 1200);
+      }
+
+      /* ═══════ INIT ═════════════════════════════════════════════ */
+      (() => {
+        const auth = ld(SK.auth, null);
+        if (!auth) {
+          window.location.href = "login.html";
+          return;
+        }
+        if (auth.role !== "user") {
+          window.location.href = "admin-dashboard.html";
+          return;
+        }
+
+        const user = ld(SK.user, null);
+        if (!user) {
+          window.location.href = "login.html";
+          return;
+        }
+
+        currentUser = user;
+        document.getElementById("sbName").textContent = user.name || "User";
+        document.getElementById("sbAvatar").textContent = (user.name ||
+          "U")[0].toUpperCase();
+        document.getElementById("pageTitle").textContent =
+          "Welcome back, " + user.name.split(" ")[0] + "!";
+
+        // Load all data from PHP API
+        loadAllData()
+          .then(() => {
+            renderDashboard();
+          })
+          .catch((err) => {
+            console.error("Failed to load data:", err);
+            toast("⚠️ Error loading data from server");
+          });
+      })();
+    </script>
+  </body>
+</html>
